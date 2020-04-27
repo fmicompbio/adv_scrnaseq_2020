@@ -1,2 +1,14 @@
-# adv_scrnaseq_2020
-Material for lectures and exercises of the SIB course "Advanced topics in single-cell transcriptomics" (May 2020)
+# Course Material for "Advanced topics in single-cell transcriptomics"
+
+This repository hosts the course material for the SIB course
+[Advanced topics in single-cell transcriptomics](https://www.sib.swiss/training/course/2020-05-adv-scrna)
+
+Teachers:
+
+- Alma Andersson  
+- Panagiotis Papasaikas  
+- Mike Smith  
+- Charlotte Soneson  
+- Avi Srivastava  
+- Michael Stadler
+
