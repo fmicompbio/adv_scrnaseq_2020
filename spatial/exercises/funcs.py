@@ -70,7 +70,129 @@ def join_data(data : Dict[str,ad.AnnData],
 
 
 
+from scipy.stats import mannwhitneyu as utest
+from statsmodels.stats.multitest import multipletests
 
+
+def dge_test(data : ad.AnnData,
+             labels : np.ndarray,
+             contrast : Union[str,int],
+             alpha : float = 0.01,
+             positive : bool = True,
+            )-> pd.DataFrame:
+    
+    """ conduct dge test
+    
+    Parameters:
+    -----------
+    
+    data : ad.AnnData
+        anndata object containing spatial data
+    labels : np.ndarray
+        labels indicating which group each observation
+        belongs to. E.g., cluster indices.
+    contrast : Union[str,int]
+        label to be compared to the rest. Must
+        be a member of "labels"
+    alpha : float
+        family-wise error rate (FWER) used for
+        correction of MHT
+    positive : bool
+        only return genes with a positive log
+        fold change. 
+    
+    Returns:
+    --------
+    Pandas data frame with 4 columns:
+    pval, contains unadjusted p-values from
+    the U test; pval_adj contains the adjusted
+    p-values; l2fc, the log2FoldChange values,
+    when comparing the mean of the selected
+    group toward the rest; sig, inidcator
+    of whether the gene has a significant
+    p-values (1) or not (0). Genes are
+    sorted w.r.t significance.
+    
+    
+    """
+    
+    # object to hold result values
+    res = np.zeros((data.X.shape[1],4))
+    res[:,0] = np.nan
+    res = pd.DataFrame(res,
+                       index = data\
+                               .var["name"]\
+                               .values,
+                       columns = ['pval',
+                                  "pval_adj",
+                                  "l2fc",
+                                  "sig"],
+                      )
+    
+    
+    # library size normalization 
+    libsize = data.X.sum(axis =1,
+                         keepdims = True)
+    
+    norm_data = data.X / libsize
+    
+    # get indices for group members
+    pos_1 = labels == contrast
+    pos_2 = labels != contrast
+     
+    # test every gene
+    for g in range(data.X.shape[0]):
+        # skip if gene is not observed in any spot
+        if norm_data[:,g].sum() <= 0:
+            res.iloc[g,0] = np.nan
+        else:
+            # perform U test
+            _,pval = utest(norm_data[pos_1,g],
+                           norm_data[pos_2,g])
+            # store p-value
+            res.iloc[g,0] = pval 
+
+            # compute average expression for
+            # selected cluster and rest
+            mu_1 = np.mean(norm_data[pos_1,g])
+            mu_2 = np.mean(norm_data[pos_2,g])
+
+            # compute log2FoldChange
+            if mu_1 == 0: 
+                l2fc = -np.inf
+            elif mu_2 == 0:
+                l2fc = np.inf
+            else:
+                l2fc = np.log2(mu_1) - np.log2(mu_2)
+            
+            # sotre l2FC
+            res.iloc[g,2] = l2fc
+    
+    # remove bad genes
+    res = res.dropna()
+    # correct fot MHT, adjust p-values
+    mht = multipletests(pvals = res["pval"].values,
+                                method = "fdr_bh",
+                                alpha = alpha)
+    
+    # store adjusted p-values
+    res.loc[:,"pval_adj"] = mht[1]
+    # add indicator of significane
+    res.loc[:,"sig"] = (res["pval_adj"]\
+                        .values <= alpha)\
+                        .astype(int)
+    # sort values
+    res = res.sort_values(by = "pval_adj",
+                          axis = 0)
+    
+    # remove negative l2FC values
+    # if specified
+    if positive:
+        res = res.\
+              iloc[res["l2fc"]\
+              .values > 0,:]
+    
+    return res
 
 # def get_crd(idx : pd.Index)->pd.DataFrame:
 #     tmp = np.array([x.replace("X","")\
