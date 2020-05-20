@@ -28,4 +28,4 @@ vignettes/*.pdf
 .Renviron
 # RStudio project files
 *.Rproj
-pythonlib
+combining_python_and_R/pythonlib
