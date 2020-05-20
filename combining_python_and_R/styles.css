@@ -43,14 +43,14 @@
 }
 
 .pythonchunk {
-    background-color: #faf2dc;
+    background-color: #faf2dc !important;
 }
 .rchunk {
-    background-color: #f5f5f5;
+    background-color: #f5f5f5 !important;
 }
 
 .bashchunk {
-    background-color: #e3eefa;
+    background-color: #e3eefa !important;
 }
 
 
