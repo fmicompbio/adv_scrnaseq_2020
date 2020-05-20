@@ -1,5 +1,5 @@
 ---
-title: "Combining R & python in RStudio"
+title: "Combining R & Python in RStudio"
 author: "Michael Stadler"
 date: "May 27, 2020"
 output:
@@ -19,12 +19,15 @@ output:
 In this exercise, we will work with RStudio as an editor and use its support
 for code from different laguages.
 
-## Links that may be useful during the exercise
+## Useful links
 
 - "R Markdown: The Definitive Guide" (free online book): https://bookdown.org/yihui/rmarkdown/
 - `knitr` chunk options: https://yihui.org/knitr/options/
 - `reticulate` documenation (R interface to python): https://rstudio.github.io/reticulate/
 - `reticulate` and sparse matrices: https://rstudio.github.io/reticulate/articles/calling_python.html#sparse-matrices-1
+- `reticulate` webinar: https://resources.rstudio.com/webinars/r-python-in-rstudio-1-2-with-reticulate
+- PyCon.DE 2018: "Reticulate: R Interface To Python" (presentation by Jens Bruno Wittek): https://www.youtube.com/watch?v=EJxQSa9lwfM
+- Tutorial for using Python in RStudio: https://docs.rstudio.com/tutorials/user/using-python-with-rstudio-and-reticulate/
 - `SciPy` documenation: https://docs.scipy.org/doc/scipy/reference/
 - `pandas.DataFrame` documentation: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html
 - `matplotlib` documentation: https://matplotlib.org/contents.html
@@ -35,7 +38,8 @@ for code from different laguages.
 
 ## RStudio notebook support
 
-Similar to Jupyter, RStudio now also supports a notebook interface (see [link](https://bookdown.org/yihui/rmarkdown/notebook.html) for details). Code chunks
+Similar to Jupyter, RStudio now also supports a notebook interface (see
+[link](https://bookdown.org/yihui/rmarkdown/notebook.html) for details). Code chunks
 can be run independently and the output is captured and visualized already in the
 editor interface. However, as pointed out during the introduction, this creates
 the risk of running things out of order and creating an inconsistent state.
@@ -58,11 +62,11 @@ finished and only share the resulting output.
 
 The content of an `Rmarkdown` document (`.Rmd` file extension) is mostly `markdown`
 (plain text with human-friendly formatting cues, see this [article](https://en.wikipedia.org/wiki/Markdown)
-on Wikipedia). `Markdown` documents are pure text, but can be converted into various
+on Wikipedia). `Markdown` documents are pure text, but can be compiled into various
 output formats (HTML, PDF and Word in RStudio).
 
 In addition, `Rmarkdown` documents can contain code chunks that will be run
-upon conversion, and their output (text or figures) can be captured and integrated
+upon compilation, and their output (text or figures) can be captured and integrated
 into the generated output file.
 
 For code chunks, multiple languages are supported by RStudio (see
@@ -383,7 +387,7 @@ ax.set_ylabel('Petal length (mm)', fontsize=12)
 ## Sparse matrices
 
 If [scipy](https://scipy.org/) is installed, [reticulate](https://rstudio.github.io/reticulate/) will
-automatically convert R `dgcMatrix` sparse matrix objects to [SciPy CSC sparse
+automatically convert R `dgcMatrix` sparse matrix objects to [SciPy CSC
 matrix](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csc_matrix.html) objects. Without a working [scipy](https://scipy.org/) installation, the code below will
 throw a "cannot convert object" error.
 
@@ -398,10 +402,16 @@ A
 ```
 
 ```{python, class.source="pythonchunk"}
-# automatic conversionto SciPy CSC matrix (requires scipy)
+# automatic conversion to SciPy CSC matrix (requires scipy)
 r.A
 r.A.shape
 ```
+
+# Final remarks
+
+- When sharing objects between Python and R, the object is often copied. In specific cases (e.g., numpy arrays), the object is not copied (R and Python point to the same object in memory).  
+- R and Python use different default numeric types - if Python expects an integer, be sure to add L in R (e.g. `3L`).
+- Keep in mind that Python uses 0-based indices, while R uses 1-based.
 
 
 # Session info
