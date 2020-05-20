@@ -16,7 +16,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 # python lib for required packages not available on the system
 # install e.g. using:
-#    pip3 install numpy rpy2 matplotlib sinfo pandas --target ./combining_python_and_R/pythonlib/ --upgrade
+#    pip3 install numpy scipy rpy2 matplotlib sinfo pandas --target ./combining_python_and_R/pythonlib/ --upgrade
 Sys.setenv(PYTHONPATH = "/tungstenfs/groups/gbioinfo/stadler/documents/teaching/SIB_advanced-scRNAseq-course_2020/adv_scrnaseq_2020/pythonlib")
 Sys.setenv(RETICULATE_PYTHON = "/usr/bin/python3.6") # use system python 3.6
 library(reticulate)
