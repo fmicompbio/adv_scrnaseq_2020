@@ -1,7 +1,14 @@
 ---
 title: "Introducing On Disk Data Formats"
 author: "Mike Smith"
-output: html_document
+output: 
+    html_document:
+        toc: true
+        toc_depth: 2
+        toc_float: false
+        number_sections: true
+        theme: sandstone
+        highlight: tango
 ---
 
 ```{r setup, include=FALSE}
@@ -10,43 +17,86 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # HDF5
 
-```{r}
+```{r, message = FALSE}
 library(rhdf5)
 library(HDF5Array)
 ```
 
-```{r, fig-1, echo = FALSE, caption = "Example HDF5 file structure"}
+```{r, fig-1, echo = FALSE, fig.cap = "Example HDF5 file structure"}
 knitr::include_graphics('images/hdf5_structure.jpg')
 ```
 
 ## Exploring an HDF5 file
 
-```{r}
+To start with we're going to look at and HDF5 file produced by 10X Genomics (the original file is available from [here](https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc8k)).  For the moment we aren't going to worry about the specifics of the 10X format, but use this file to demonstrate how you can take a look at the contents of any HDF5 file.
+
+First, lets start with the function `h5ls()`:
+
+```{r, h5ls}
 h5ls(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5')
 ```
 
 The output from `h5ls()` gives us an overview of the structure of the file, without really showing us the content.  We can see `pbmc8k_raw_gene_bc_matrices_h5.h5` contains a single group (GRCh38) and within that group there are many datasets.  We can also see what type of data each dataset contains (the `dclass` column).
 
+## Reading from HDF5 files
 
-```{r}
+
+```{r, pbmc1}
 tenXdata <- h5read(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/GRCh38/data")
-```
-
-
-## Playing with chunk sizes
-
-```{r}
-mat <- matrix( sample(1:100L, size = 10000 * 50000, replace = TRUE) )
 ```
 
 
 ## Reading subsets of the data
 
+So far we've used `h5read()` to pull the entire contents of a HDF5 dataset in our R session.  However this doesn't take advantage of one of the major features of HDF5 files - efficient access to subsets of a dataset.
+
+What happens if you try to run the code below, which reads the `counts_matrix` dataset from `brain100k.h5`?  Try using `h5ls()` to explore the size of the data.
+
+```{r, too-large, eval = FALSE}
+brain_data <- h5read(file = "../data/brain100k.h5", name = "/counts_matrix")
+```
+
+We can use the `index` argument to specify the elements we want to extract from our dataset.  The syntax is a little strange for R, and should be a list with the same length as the number of dimensions in our dataset - in our case that's two.  Each element of the list is a vector providing the indices you want to read or `NULL` to read everything in that dimension.  In the example below we will read all the rows and the first five columns.
+
+```{r, reading-subset}
+brain_data_subset <- h5read(file = "../data/brain100k.h5", name = "/counts_matrix", index = list(NULL, 1:5))
+```
+
+### *Exercise*
+
+Can you modify the code to read other sets of columns?  Instead of reading the first five columns try reading the last five or columns 50,001 - 50,005.  You can also experiment reading a larger number of columns - perhaps 100, 1,000 or 10,000.  Use `system.time()` to examine how long reading these subsets takes.
+
+```{r, eval = FALSE}
+## Insert your own code here
+```
+
+
+
+
+# HDF5Array
+
 ```{r}
-brain_data <- h5read(file = "../data/brain200k.h5")
+library(HDF5Array)
+```
+
+```{r}
+brain_10k <- as.matrix(HDF5Array(file = "../data/brain100k.h5", name = "/counts_matrix")[,1:10000])
+```
+
+
+## Exploring the effect of chunk layout
+
+```{r, eval = FALSE}
+writeHDF5Array( x = brain_10k, filepath = "../data/new_brain.h5", name = "one_chunk", chunkdim = c(nrow(brain_10k), ncol(brain_10k)))
+writeHDF5Array( x = brain_10k, filepath = "../data/new_brain.h5", name = "square_chunks", chunkdim = c(1000, 1000))
+writeHDF5Array( x = brain_10k, filepath = "../data/new_brain.h5", name = "row_chunks", chunkdim = c(1, ncol(brain_10k)))
+writeHDF5Array( x = brain_10k, filepath = "../data/new_brain.h5", name = "col_chunks", chunkdim = c(nrow(brain_10k), 1))
 ```
 
 
 ```{r}
-brain_data <- h5read(file = "../data/brain100k.h5", name = "/counts_matrix", index = list(NULL, 1:5))
+system.time( h5read(file = "../data/new_brain.h5", name = "/one_chunk", index = list(NULL, 1:5)) )
+system.time( h5read(file = "../data/new_brain.h5", name = "/square_chunks", index = list(NULL, 1:5)) )
+system.time( h5read(file = "../data/new_brain.h5", name = "/row_chunks", index = list(NULL, 1:5)) )
+system.time( h5read(file = "../data/new_brain.h5", name = "/col_chunks", index = list(NULL, 1:5)) )
 ```
