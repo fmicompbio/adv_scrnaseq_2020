@@ -16,7 +16,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 # python lib for required packages not available on the system
 # install e.g. using:
-#    pip3 install numpy rpy2 matplotlib --target ./pythonlib/ --upgrade
+#    pip3 install numpy scipy rpy2 matplotlib sinfo pandas --target ./combining_python_and_R/pythonlib/ --upgrade
 Sys.setenv(PYTHONPATH = "/tungstenfs/groups/gbioinfo/stadler/documents/teaching/SIB_advanced-scRNAseq-course_2020/adv_scrnaseq_2020/pythonlib")
 Sys.setenv(RETICULATE_PYTHON = "/usr/bin/python3.6") # use system python 3.6
 library(reticulate)
@@ -42,11 +42,11 @@ py_config()
 - ![Python](figures/python-logo-generic.svg){width=150px}
     * general purpose programming language
     * clean, efficient, modular design (software deployment)
-    * scipy, scikit-learn, Keras, PyTorch
+    * scipy, scVelo, scikit-learn, Keras, PyTorch
 - ![R](figures/Rlogo.svg){width=60px} 
     * statistical modeling and data analysis language
     * great for visualization
-    * Bioconductor (edgeR, DESeq2), tidyverse, ggplot2, shiny
+    * Bioconductor (edgeR, DESeq2, scran, scater), tidyverse, ggplot2, shiny
 
 ## Many "Python versus R" comparisons out there... {.smaller}
 
@@ -59,14 +59,14 @@ py_config()
 
 ## Why combining the two? {.larger}
 
-- any data scienctist constantly combines tools from various sources
+- any data scientist constantly combines tools from various sources
 - unlikely that all functionality is available from a single source  
 - nice to have fewer scripts / steps / intermediate files  
     <!-- * <span class="inline-code">PyTorch</span> is my favorite ML framework. -->
     <!-- * I would like to use <span class="inline-code">ggplot2</span> for plotting. -->
 - use case (why I started looking into combining R and Python):
-    * primarly use <span class="inline-code">R/BioC</span> for analysis of single cell data
-    * want to make use of <span class="inline-code">scvelo</span> python package for RNA-velocity analysis
+    * primarily use <span class="inline-code">R/BioC</span> for analysis of single cell data
+    * want to make use of <span class="inline-code">scVelo</span> python package for RNA-velocity analysis
 
 ## Levels of integration {.smaller}
 
