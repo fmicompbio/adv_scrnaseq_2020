@@ -8,6 +8,45 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## HDF5
+# HDF5
+
+```{r}
+library(rhdf5)
+library(HDF5Array)
+```
+
+```{r, fig-1, echo = FALSE, caption = "Example HDF5 file structure"}
+knitr::include_graphics('images/hdf5_structure.jpg')
+```
+
+## Exploring an HDF5 file
+
+```{r}
+h5ls(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5')
+```
+
+The output from `h5ls()` gives us an overview of the structure of the file, without really showing us the content.  We can see `pbmc8k_raw_gene_bc_matrices_h5.h5` contains a single group (GRCh38) and within that group there are many datasets.  We can also see what type of data each dataset contains (the `dclass` column).
 
 
+```{r}
+tenXdata <- h5read(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/GRCh38/data")
+```
+
+
+## Playing with chunk sizes
+
+```{r}
+mat <- matrix( sample(1:100L, size = 10000 * 50000, replace = TRUE) )
+```
+
+
+## Reading subsets of the data
+
+```{r}
+brain_data <- h5read(file = "../data/brain200k.h5")
+```
+
+
+```{r}
+brain_data <- h5read(file = "../data/brain100k.h5", name = "/counts_matrix", index = list(NULL, 1:5))
+```
