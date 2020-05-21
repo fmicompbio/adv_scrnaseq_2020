@@ -159,6 +159,16 @@ Raw                    Python bytearray  as.raw(c(1:10))
 NULL, TRUE, FALSE      None, True, False NULL, TRUE, FALSE
 
 
+## [reticulate](https://rstudio.github.io/reticulate/) used in other packages {.smaller data-background="figures/reticulated_python.png" data-background-size="120px" data-background-position="right bottom" data-background-repeat="no-repeat"}
+
+- many packages use `reticulate` in the background to bridge to Python
+- prominent examples are the R packages [Tensorflow](https://tensorflow.rstudio.com/) and [Keras](https://keras.rstudio.com/) that implement an R API strongly resembling the original Python APIs ([Tensorflow](https://www.tensorflow.org/) and [Keras](https://keras.io/)), and use `reticulate` for Python calls and object translation  
+- you will see those packages in use on the third of this course in the discussion of deep generative networks  
+- for package developers, the newly released [basilisk](https://bioconductor.org/packages/basilisk/) Bioconductor package may also be interesting: It provides a mechanism to distribute a controled Python environment
+
+<div class="hvcentered">![](figures/tensorflow-logo.svg){width=300px} ![](figures/keras_logo.png){width=300px}</div>
+
+
 ## Example: Calling R from python using [rpy2](https://rpy2.github.io/) {data-background="figures/rpy2_logo2013.png" data-background-size="120px" data-background-position="right bottom" data-background-repeat="no-repeat"}
 
 ```{python rFromPython, eval = FALSE, echo=TRUE, class.source = "pythonchunk"}

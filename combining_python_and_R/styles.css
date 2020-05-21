@@ -53,6 +53,10 @@
     background-color: #e3eefa !important;
 }
 
+.hvcentered {
+    text-align: center;
+    vertical-align: middle;
+}
 
 .larger {
     font-size: 1.2em;
