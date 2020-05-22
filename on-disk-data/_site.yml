@@ -1,0 +1,20 @@
+title: "Working with on-disk data"
+author:
+  - name: Mike Smith
+output: 
+    html_document:
+        toc: true
+        toc_depth: 2
+        toc_float: true
+        number_sections: false
+        theme: flatly
+        highlight: tango
+navbar:
+  title: "On-disk-data"
+  left:
+    - text: "Introducing HDF5 files"
+      href: 01-on-disk.html
+    - text: "Exploring single-cell HDF5 file types"
+      href: 02-on-disk.html
+    - text: "Using HDF5 efficiently"
+      href: 03-on-disk.html

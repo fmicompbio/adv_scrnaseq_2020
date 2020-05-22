@@ -1,0 +1,29 @@
+---
+title: "Exploring single-cell file types"
+author: "Mike Smith"
+output: 
+    html_document:
+        toc: true
+        toc_depth: 2
+        toc_float: false
+        number_sections: false
+        theme: flatly
+        highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# HDF5Array
+
+```{r}
+library(HDF5Array)
+library(DropletUtils)
+library(LoomExperiment)
+```
+
+```{r}
+
+```

@@ -1,0 +1,79 @@
+---
+title: "Using HDF5 efficiently"
+author: "Mike Smith"
+output: 
+    html_document:
+        toc: true
+        toc_depth: 2
+        toc_float: false
+        number_sections: false
+        theme: flatly
+        highlight: tango
+---
+    
+    
+## Reading subsets of the data
+
+So far we've used `h5read()` to pull the entire contents of a HDF5 dataset in our R session.  However this doesn't take advantage of one of the major features of HDF5 files - efficient access to subsets of a dataset.
+
+What happens if you try to run the code below, which reads the `counts_matrix` dataset from `brain100k.h5`?  Try using `h5ls()` to explore the size of the data.
+
+```{r, too-large, eval = FALSE}
+brain_data <- h5read(file = "../data/brain100k.h5", name = "/counts_matrix")
+```
+
+We can use the `index` argument to specify the elements we want to extract from our dataset.  The syntax is a little strange for R, and should be a list with the same length as the number of dimensions in our dataset - in our case that's two.  Each element of the list is a vector providing the indices you want to read or `NULL` to read everything in that dimension.  In the example below we will read all the rows and the first five columns.
+
+```{r, reading-subset}
+brain_data_subset <- h5read(file = "../data/brain100k.h5", name = "/counts_matrix", index = list(NULL, 1:5))
+```
+
+### *Exercise*
+
+Can you modify the code to read other sets of columns?  Instead of reading the first five columns try reading the last five or columns 50,001 - 50,005.  You can also experiment reading a larger number of columns - perhaps 100, 1,000 or 10,000.  Use `system.time()` to examine how long reading these subsets takes.
+
+```{r, eval = FALSE}
+## Insert your own code here
+```
+
+Hopefully you found that it takes a very similar amount of time to read five consecutive columns from anywhere in the file.  You should also notice that the time taken to read larger numbers of columns scales fairly linearly with the number of columns you want.
+
+
+## Exploring the effect of chunk layout
+
+```{r, echo = FALSE, fig.cap='In HDF5 datasets can be stored as "chunks" on disk, and if only a subset of data is required only the necessary chunks need to be read.  Chunk layout doesn\'t have to be symetrical in every dimension, in the 2-dimensional dataset above chunks can consists of entire rows, entire columns, or any other regular partitioning.'}
+knitr::include_graphics('images/Chunk_layout_1.png')
+knitr::include_graphics('images/Chunk_layout_2.png')
+```
+
+```{r, eval = FALSE}
+brain_10k <- as.matrix(HDF5Array(file = "../data/brain100k.h5", name = "/counts_matrix")[,1:10000])
+```
+
+```{r, eval = FALSE}
+h5createFile(file = "../data/new_brain.h5")
+h5createDataset(file = "../data/new_brain.h5", dataset = "one_chunk", 
+                dims = dim(brain_10k), storage.mode = "integer",
+                chunk = c(nrow(brain_10k), ncol(brain_10k)))
+h5write(brain_10k, file = "../data/new_brain.h5", name = "one_chunk")
+h5createDataset(file = "../data/new_brain.h5", dataset = "square_chunks", 
+                dims = dim(brain_10k), storage.mode = "integer",
+                chunk = c(1000, 1000))
+h5write(brain_10k, file = "../data/new_brain.h5", name = "square_chunks")
+h5createDataset(file = "../data/new_brain.h5", dataset = "row_chunks", 
+                dims = dim(brain_10k), storage.mode = "integer",
+                chunk = c(1, ncol(brain_10k)))
+h5write(brain_10k, file = "../data/new_brain.h5", name = "row_chunks")
+h5createDataset(file = "../data/new_brain.h5", dataset = "col_chunks", 
+                dims = dim(brain_10k), storage.mode = "integer",
+                chunk = c(nrow(brain_10k), 1))
+h5write(brain_10k, file = "../data/new_brain.h5", name = "col_chunks")
+```
+
+
+```{r, timing-chunks}
+system.time( h5read(file = "../data/new_brain.h5", name = "/one_chunk", index = list(NULL, 1:5)) )
+system.time( h5read(file = "../data/new_brain.h5", name = "/square_chunks", index = list(NULL, 1:5)) )
+system.time( h5read(file = "../data/new_brain.h5", name = "/row_chunks", index = list(NULL, 1:5)) )
+system.time( h5read(file = "../data/new_brain.h5", name = "/col_chunks", index = list(NULL, 1:5)) )
+```
