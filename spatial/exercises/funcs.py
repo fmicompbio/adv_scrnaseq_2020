@@ -194,40 +194,6 @@ def dge_test(data : ad.AnnData,
     
     return res
 
-# def get_crd(idx : pd.Index)->pd.DataFrame:
-#     tmp = np.array([x.replace("X","")\
-#                     .split('x') for x in idx ])\
-#             .astype(float)
-#     tmp = pd.DataFrame(tmp)
-#     tmp.columns = ['x','y']
-#     return tmp
-
-
-# def join_data(data : List[ad.AnnData],
-#               )->ad.AnnData:
-
-#     joined = pd.DataFrame([])
-#     var = pd.DataFrame([])
-#     obs = pd.DataFrame([])
-
-#     for k,d in enumerate(data):
-#         _meta['original'] = d.obs.index.values
-#         _meta['id'] = k
-#         new_index =  pd.Index([str(k) + "_" + x for x in d.index.values])
-#         tmp = pd.DataFrame(d.X,
-#                            index = new_index,
-#                            columns = d.var.index,
-#                            )
-#         _meta.index = new_index
-#         meta = pd.concat((meta,_meta))
-#         joined = pd.concat((joined,tmp))
-
-#     joined[pd.isna(joined)] = 0
-
-#     return joined,meta
-
-
-
 
 def plot_data(ax : plt.Axes,
               data : ad.AnnData,
