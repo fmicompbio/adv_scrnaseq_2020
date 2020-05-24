@@ -22,6 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(HDF5Array)
 library(DropletUtils)
 library(LoomExperiment)
+library(Seurat)
 ```
 
 ```{r}
