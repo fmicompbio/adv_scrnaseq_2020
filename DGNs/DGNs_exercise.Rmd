@@ -1,0 +1,360 @@
+---
+title: "Variational Autoencoder for SC RNAseq data"
+author: "Panagiotis Papasaikas"
+date: "2020-05-29"
+bibliography: DGNs.bib
+csl: springer-basic-brackets-no-et-al.csl
+output: 
+  html_document:
+    toc: true
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {rmarkdown::render(inputFile, encoding = encoding,  output_format='BiocStyle::html_document', output_file=paste0(dirname(inputFile), '/', basename(tools::file_path_sans_ext(inputFile)), '_html.html'))})
+---
+
+```{r style, echo = FALSE, results = 'hide', message=FALSE, warning=FALSE, cache=FALSE, purl=FALSE}
+## Packages required for formatting
+suppressPackageStartupMessages({
+  library(knitr)
+  library(png)
+  library(grid)
+  library(BiocStyle)
+})
+## Bioc style for markdown
+BiocStyle::markdown()
+
+## Set different chunk options for different output formats
+out_type <- opts_knit$get("rmarkdown.pandoc.to")
+if (out_type == "beamer") {
+  fig.scale <- 0.5
+  fig.width <- 6
+  fig.height <- 4.5
+} else if (out_type == "html") {
+  fig.scale <- 1
+  fig.width <- 10
+  fig.height <- 7
+} else if (out_type == "slidy") {
+  fig.scale <- 1
+  fig.width <- 10
+  fig.height <- 7
+} else {
+  fig.scale <- 1
+  fig.width <- 6
+  fig.height <- 4.5
+}
+
+## default chunk options
+opts_chunk$set(tidy = FALSE, cache = TRUE, 
+               tidy.opts = list(blank = FALSE, width.cutoff = 120),
+               fig.width = fig.width, fig.height = fig.height)
+## text width in chunks
+options(width = 70)
+
+evalSolution <- TRUE
+```
+
+
+
+
+
+
+```{r}
+library(reticulate)
+
+# check if Python is available and has already been initialized
+py_available()
+# dicsover Python that provides "keras" 
+reticulate::py_discover_config(required_module = "keras")
+
+
+## For setup on a renku environment:  
+reticulate::use_virtualenv("/opt/conda")
+
+
+## Only for xenon6 setup:
+reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.3.0-tensorflow-2.0.0-gpu")
+reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.2.5-tensorflow-1.14.0-gpu")
+
+
+Sys.setenv("CUDA_VISIBLE_DEVICES" = "1" ) # Define visible GPU devices. Make certain that the set device is not in use by checking the output of nvidia-smi
+
+library(keras)
+K <- backend() # manual add-on
+library(tensorflow)
+tf$version$VERSION
+library(Matrix)
+library(SingleCellExperiment)
+```
+
+
+
+
+# Load the pre-processed dataset
+
+The dataset that we will use is a composite dataset of three independent
+10x runs originating from three different labs. It consists of 9288 mammary 
+epithelial cells, sequenced using 10x Genomics technology, which has already
+been pre-filtered to include only cells that are assigned unambiguously
+to one of three major  cell types:
+luminal progenitors, luminal mature and basal.
+
+Features have also been preselected to include only those genes that are present and variable in all three datasets.
+Next, we load the preprocessed dataset and have a first look at the 
+composition of the dataset:
+
+```{r}
+## Download the data and set row names to gene symbols whenever possible
+sce <- readRDS(gzcon(url("https://ivanek.github.io/analysisOfGenomicsDataWithR/data/10/SCE_MammaryEpithelial_x3.rds?raw=true")))
+#bct <- readRDS(gzcon(url("https://github.com/NBISweden/single-cell_sib_scilifelab/blob/master/datasets/SCE_MammaryEpithelial_x3.rds?raw=true")))
+
+
+rownames(sce) <- scater::uniquifyFeatureNames(
+  ID = rownames(sce), 
+  names = as.character(rowData(sce)$gene.symbols)
+)
+
+
+#Subsample cells to speed up processing and, most importnantly, later-on model training:
+set.seed(42)
+n=3000
+sce <- sce[, sample(1:ncol(sce), n )  ]
+## Dataset compostion per cell type and study:  
+table(colData(sce)$study , colData(sce)$cell.class)
+```
+
+
+
+
+Let's also take a look at a "standard" projection of the dataset  
+
+```{r,  fig.width = 12, fig.height = 6,  warning=FALSE}
+# We first normalize all cells for library size.
+assays(sce )[["lognorm"]] <- log2(sweep( counts(sce),2,sce$library_size ,FUN="/")*1e4 +1)
+reducedDim(sce, "PCA" )  <- rsvd::rpca(t( assay(sce,"lognorm") ),k=32,retx=TRUE,center=TRUE,scale=FALSE)$x
+reducedDim(sce, "TSNE" ) <- Rtsne( reducedDim(sce,"PCA"), perplexity = 30, initial_dims=32, pca=FALSE, theta=0.3)$Y #~5"-20" run time
+
+cowplot::plot_grid(scater::plotTSNE(sce, colour_by = "study" ),
+                   scater::plotTSNE(sce, colour_by = "cell.class"))
+```
+
+
+
+
+
+
+Finally we will split the data 80-20 to a training and validation set:
+
+```{r}
+combined.df.filtered <- as.matrix(assays(sce )[["lognorm"]] )  
+
+combined.annot.study <- sce@colData$study
+combined.annot.ct <- sce@colData$cell.class
+combined.annot <- paste(sce@colData$study,sce@colData$cell.class,sep="_")
+
+####### Splitting in training and validation data, converting to array
+set.seed(1)
+holback.fraction=0.2
+holdback.samples=sample(1:ncol(sce),round(holback.fraction*ncol(sce)) ) 
+
+
+
+##### Training Data:
+study_annot.train=combined.annot.study[-holdback.samples]
+ct_annot.train=combined.annot.ct[-holdback.samples]
+
+M=combined.df.filtered[,-holdback.samples]
+sc_train_x=array(M, dim= c(dim(M)[1], prod(dim(M)[-1]))) # convert to an array
+sc_train_x=t(sc_train_x)                                 #Need to transpose before passing to the model
+rm(M)
+
+
+##### Validation Data:
+study_annot.test=combined.annot.study[holdback.samples]
+ct_annot.test=combined.annot.ct[holdback.samples]
+
+M=combined.df.filtered[,holdback.samples]
+sc_test_x=array( M, dim= c(dim(M)[1], prod(dim(M)[-1]))) # convert to an array
+sc_test_x=t(sc_test_x)                                   # Need to transpose before passing to the model
+rm(M)
+###################################################################
+```
+
+
+
+
+
+
+
+
+
+# Define the  variational autoencoder model
+
+
+```{r}
+# Sparse variational autoencoder with one hot encodding for auxiliary input fed after the latent layer
+
+# Parameters --------------------------------------------------------------
+neck <- 64L #256L
+drop_rate=0.2 #less than 0.2
+gene_dim <- ncol(sc_train_x)  #Number of features (genes) in your dataset
+latent_dim <- neck
+intermediate_dim <- 512L #
+epsilon_std <- 0.8  #Standard deviation of the prior latent distribution (def=1)
+var_prior <- epsilon_std**2
+log_var_prior <- log(var_prior)
+kl_weight=0.1   #Weight got the kulllback leibler divergence loss (def=1 ) 
+
+# Encoder definition --------------------------------------------------------
+x <- layer_input(shape = c(gene_dim),name="gene_input")
+h <- layer_dense(x, intermediate_dim, activation = "elu") #softsign +elu +linear
+h <- layer_dropout(h, rate = drop_rate)
+h <- layer_dense(h,256,activation="elu")
+h <- layer_dropout(h, rate = drop_rate)
+h <- layer_dense(h,128, activation = "elu")
+h <- layer_dropout(h, rate = drop_rate)
+z_mean <- layer_dense(h, latent_dim)
+z_log_var <- layer_dense(h, latent_dim)
+
+#### Sampling from the latent space:
+sampling <- function(arg){
+    z_mean <- arg[, 1:(latent_dim)]
+    z_log_var <- arg[, (latent_dim + 1):(2 * latent_dim)]
+    epsilon <- K$random_normal(
+        shape = c(K$shape(z_mean)[[1]]), 
+        mean=0.,
+        stddev=epsilon_std
+    )
+    z_mean + K$exp(z_log_var/2)*epsilon
+}
+
+
+# note that "output_shape" isn't necessary with the TensorFlow backend
+z <- layer_concatenate(list(z_mean, z_log_var)) %>% 
+    layer_lambda(sampling)
+
+
+# we instantiate the decoder separately so as to reuse it later
+decoder_h <- keras_model_sequential()
+decoder_h %>%
+    layer_dense(units=128,activation="elu") %>% #Start with /4 when the extra optional layer is used. Otherwise /2
+    layer_dropout(rate = drop_rate) %>%
+    layer_dense(units=256,activation="elu") %>% 
+    layer_dropout(rate = drop_rate) %>%
+    layer_dense(intermediate_dim, activation = "elu") %>%  
+    layer_dropout(rate = drop_rate)
+decoder_mean <- layer_dense(units = gene_dim, activation = "relu")
+h_decoded <- decoder_h(z)
+x_decoded_mean <- decoder_mean(h_decoded)
+
+# end-to-end autoencoder
+vae <- keras_model(x, x_decoded_mean)
+
+# encoder, from inputs to latent space
+encoder <- keras_model(x, z_mean)
+
+# generator, from latent space to reconstructed inputs
+decoder_input <- layer_input(shape = latent_dim)
+h_decoded_2 <- decoder_h(decoder_input)
+x_decoded_mean_2 <- decoder_mean(h_decoded_2)
+generator <- keras_model(decoder_input, x_decoded_mean_2)
+
+
+
+vae_loss <- function(x, x_decoded_mean){
+    reconstruction_loss  <-  loss_mean_squared_error(x, x_decoded_mean)
+    kl_loss <- -kl_weight*0.5*K$mean(1 + z_log_var-log_var_prior - K$square(z_mean)/var_prior - K$exp(z_log_var)/var_prior, axis = -1L)  # More general formula
+    reconstruction_loss + kl_loss
+}
+
+
+
+#compiling the defined model with metric = accuracy and optimiser adam.
+opt <-  optimizer_adam(lr =0.001,amsgrad = TRUE)# 
+vae %>% compile(
+  loss = vae_loss,
+  optimizer = opt,
+  metrics = custom_metric("cor",cor_metric)
+  #,
+  #experimental_run_tf_function=FALSE
+  #run_eagerly=FALSE
+)
+
+```
+
+
+
+
+
+```{r}
+########################################################################################################  
+###########################################     TRAINING      ########################################## 
+########################################################################################################  
+
+##### Learning rate scheduler: 
+ burn_in.nepochs=80 
+ lr_schedule <- function(epoch, current_lr) {
+   if (epoch < 450) lr <- min (2e-3, 1e-4 * ( (epoch-burn_in.nepochs)/20) )#Increase lr linearly up to 2e-3
+   else if (epoch > 600 ) {lr <- 5e-6 } #Second LR drop  (Cool down)
+     else {lr <- 1e-4} #First LR drop
+     return(lr)
+ }
+
+
+lr_sch <- callback_learning_rate_scheduler(lr_schedule)
+
+
+##### Early stopping:
+early_stopping <- callback_early_stopping(monitor = "val_loss", min_delta = 0,
+                                          patience = 125, verbose = 0, mode = "auto",
+                                          baseline = NULL, restore_best_weights = TRUE)
+
+
+##### Start tensorboard:
+log_dir <-  paste0(getwd(),"/logs/run_POOL2/",flag)
+system(paste0 ("rm -rf ", log_dir, "/*")  )
+
+system("pkill tensorboard")
+options(browser = function(url) browseURL(url, browser = "/usr/bin/firefox"))
+tensorboard( log_dir,  launch_browser = TRUE )
+
+tnsrb <- callback_tensorboard( log_dir )
+
+
+batch_size <- 512 
+burn_in_lr=2e-5  # 
+k_set_value(vae$optimizer$lr, burn_in_lr) # Manuallly setting lr
+###### Burn in without early stopping:
+vae %>% fit(
+    x=sc_train_x,
+    y=sc_train_x, 
+    shuffle = TRUE, 
+    epochs = burn_in.nepochs,
+    batch_size = batch_size, 
+    validation_data=list(sc_test_x,sc_test_x)
+    #callbacks = list(tnsrb)
+)
+
+
+batch_size <- 512 
+nepochs=1200 # 
+######  Resume training after burn-in. Increase lr up to a ceiling and finally cool-down using scheduling. Use early stopping:
+vae %>% fit(
+    x=sc_train_x,
+    y=sc_train_x, 
+    shuffle = TRUE, 
+    epochs = nepochs,
+    initial_epoch=burn_in.nepochs,
+    batch_size = batch_size, 
+    validation_data=list(sc_test_x,sc_test_x),
+    # callbacks = list(tnsrb, early_stopping, lr_sch )
+    callbacks = list(early_stopping, lr_sch )
+)
+
+
+#save_model_weights_hdf5(vae, filepath)  
+```
+
+
+
+
+
