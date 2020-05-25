@@ -91,7 +91,7 @@ The figures below show three different aspects of the model:
 * The upper left panel shows the value of $u(t)$ and $s(t)$ as functions of time. 
 * The right panel shows a phase plot, with $s(t)$ and $u(t)$ plotted against each other. Each dot corresponds to one time point, and the points have been slightly jittered for better visibility.
 
-```{r, echo = FALSE, eval = TRUE, fig.width = 7, fig.height = 3}
+```{r plotvelo-alpha1, echo = FALSE, eval = TRUE, fig.width = 7, fig.height = 3}
 source("plotVelocityApp/plot_abundances.R")
 tf <- data.frame(t = seq(0, 20, by = 0.01)) %>%
   dplyr::mutate(k = ifelse(t == 0, 0, 1)) %>%
@@ -138,7 +138,7 @@ Once velocities have been estimated, approximate abundances at a future time poi
 
 Next, let's consider another example, where instead of a constant transcription we consider a transient pattern, where $\alpha>0$ for some time before going back to zero. 
 
-```{r, echo = FALSE, eval = TRUE, fig.width = 7, fig.height = 3}
+```{r plotvelo-alpha2, echo = FALSE, eval = TRUE, fig.width = 7, fig.height = 3}
 source("plotVelocityApp/plot_abundances.R")
 tf <- data.frame(t = seq(0, 20, by = 0.01)) %>%
   dplyr::mutate(k = ifelse(t == 0, 0, ifelse(t < 10, 1, 2))) %>%
@@ -165,7 +165,7 @@ We can also estimate velocities in the same way as described previously; points 
 
 Finally, let's consider a case with the same type of transient transcription as above, but with a much shorter duration. 
 
-```{r, echo = FALSE, eval = TRUE, fig.width = 7, fig.height = 3}
+```{r plotvelo-alpha3, echo = FALSE, eval = TRUE, fig.width = 7, fig.height = 3}
 source("plotVelocityApp/plot_abundances.R")
 tf <- data.frame(t = seq(0, 20, by = 0.01)) %>%
   dplyr::mutate(k = ifelse(t == 0, 0, ifelse(t < 3, 1, 2))) %>%
@@ -321,13 +321,21 @@ We will practice generating the [_Salmon_](https://salmon.readthedocs.io/en/late
 Here, we first set the path to the data (`datadir`), as well as to the folder where we will store the generated index and quantifications (`outdir`).
 
 ```{r setpaths, class.source = "rchunk", eval = TRUE}
-datadir <- "data/spermatogenesis_subset"
-outdir <- "data/spermatogenesis_subset/txintron"
+if (file.exists("/home/rstudio/adv_scrnaseq_2020")) {
+  datadir <- "/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset"
+  outdir <- "/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron"
+} else {
+  datadir <- "data/spermatogenesis_subset"
+  outdir <- "data/spermatogenesis_subset/txintron"
+}
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 Sys.setenv(datadir = datadir, outdir = outdir)
 ```
 
 ```{bash listfiles, class.source = "bashchunk"}
+## If run in a console
+## datadir=/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset
+## outdir=/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron
 ## Check what is included in the data directory
 ls $datadir
 ```
@@ -620,11 +628,15 @@ import scvelo as scv
 import matplotlib
 import pandas as pd
 from pathlib import Path
+from os import path
 ```
 
 ```{python set-velodir, class.source = "pythonchunk"}
 ## Path to data to use for RNA velocity calculations
-velodir = Path('data/spermatogenesis_rnavelocity')
+if (path.exists("/home/rstudio/adv_scrnaseq_2020")):
+  velodir = Path('/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity')
+else:
+  velodir = Path('data/spermatogenesis_rnavelocity')
 ```
 
 We also set a few general parameters, prettifying plots and defining the path to the directory where _scVelo_ will save plots if requested. 
@@ -780,7 +792,7 @@ adata.var['velocity_genes'].sum()
 
 We can plot the distributions of the estimated kinetic rates, for the retained 'velocity genes'.
 
-```{python, class.source = "pythonchunk"}
+```{python plot-rate-distrs, class.source = "pythonchunk"}
 df = adata.var
 df = df[df['velocity_genes'] == True]
 

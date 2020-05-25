@@ -88,7 +88,7 @@ The figures below show three different aspects of the model:
 * The upper left panel shows the value of $u(t)$ and $s(t)$ as functions of time. 
 * The right panel shows a phase plot, with $s(t)$ and $u(t)$ plotted against each other. Each dot corresponds to one time point, and the points have been slightly jittered for better visibility.
 
-![](rna-velocity_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+![](rna-velocity_files/figure-html/plotvelo-alpha1-1.png)<!-- -->
 
 The first thing we notice is that as the gene starts being transcribed (small values of $t$), both the unspliced and the spliced abundances start increasing.
 As expected, the unspliced abundance increases first, followed a bit later by the spliced abundance (since the latter has to go via the unspliced state).
@@ -126,7 +126,7 @@ Once velocities have been estimated, approximate abundances at a future time poi
 
 Next, let's consider another example, where instead of a constant transcription we consider a transient pattern, where $\alpha>0$ for some time before going back to zero. 
 
-![](rna-velocity_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](rna-velocity_files/figure-html/plotvelo-alpha2-1.png)<!-- -->
 
 Here, we observe the same type of increase in $u(t)$ and $s(t)$ in the beginning of the time course (of course, the system doesn't know that $\alpha$ will go down to zero in the future). 
 When transcription is turned off, both $u(t)$ and $s(t)$ decrease in an exponential fashion. 
@@ -144,7 +144,7 @@ We can also estimate velocities in the same way as described previously; points 
 
 Finally, let's consider a case with the same type of transient transcription as above, but with a much shorter duration. 
 
-![](rna-velocity_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+![](rna-velocity_files/figure-html/plotvelo-alpha3-1.png)<!-- -->
 
 Now, there is not enough time to reach the steady state. 
 This complicates the estimation of $\gamma/\beta$ based on the phase plot - if we use the points in the upper right part of the plot we will overestimate the ratio. 
@@ -294,14 +294,22 @@ Here, we first set the path to the data (`datadir`), as well as to the folder wh
 
 
 ```{.r .rchunk}
-datadir <- "data/spermatogenesis_subset"
-outdir <- "data/spermatogenesis_subset/txintron"
+if (file.exists("/home/rstudio/adv_scrnaseq_2020")) {
+  datadir <- "/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset"
+  outdir <- "/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron"
+} else {
+  datadir <- "data/spermatogenesis_subset"
+  outdir <- "data/spermatogenesis_subset/txintron"
+}
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 Sys.setenv(datadir = datadir, outdir = outdir)
 ```
 
 
 ```{.bash .bashchunk}
+## If run in a console
+## datadir=/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset
+## outdir=/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron
 ## Check what is included in the data directory
 ls $datadir
 ```
@@ -859,13 +867,13 @@ txis
 
 ```
 ## class: SingleCellExperiment 
-## dim: 2787 319 
+## dim: 2787 346 
 ## metadata(0):
 ## assays(2): spliced unspliced
 ## rownames(2787): ENSMUSG00000117547.1 ENSMUSG00000097746.2 ...
 ##   ENSMUSG00000095993.1 ENSMUSG00000118197.1
 ## rowData names(0):
-## colnames(319): CCTACCAGTAGCCTAT GAGTCCGGTCGTCTTC ... CCATGTCAGACTAGAT
+## colnames(346): CCTACCAGTAGCCTAT GAGTCCGGTCGTCTTC ... CCATGTCAGACTAGAT
 ##   CAGCAGCCACGCGAAA
 ## colData names(0):
 ## reducedDimNames(0):
@@ -900,12 +908,16 @@ import scvelo as scv
 import matplotlib
 import pandas as pd
 from pathlib import Path
+from os import path
 ```
 
 
 ```{.python .pythonchunk}
 ## Path to data to use for RNA velocity calculations
-velodir = Path('data/spermatogenesis_rnavelocity')
+if (path.exists("/home/rstudio/adv_scrnaseq_2020")):
+  velodir = Path('/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity')
+else:
+  velodir = Path('data/spermatogenesis_rnavelocity')
 ```
 
 We also set a few general parameters, prettifying plots and defining the path to the directory where _scVelo_ will save plots if requested. 
@@ -1141,10 +1153,10 @@ scv.pp.moments(adata, n_pcs = 30, n_neighbors = 30)
 
 ```
 ## computing neighbors
-##     finished (0:00:06) --> added 
+##     finished (0:00:03) --> added 
 ##     'distances' and 'connectivities', weighted adjacency matrices (adata.obsp)
 ## computing moments based on connectivities
-##     finished (0:00:01) --> added 
+##     finished (0:00:00) --> added 
 ##     'Ms' and 'Mu', moments of spliced/unspliced abundances (adata.layers)
 ```
 
@@ -1187,7 +1199,7 @@ scv.tl.recover_dynamics(adata)
 
 ```
 ## recovering dynamics
-## ... 0%... 1%... 1%... 2%... 4%... 4%... 5%... 7%... 7%... 9%... 10%... 11%... 12%... 13%... 14%... 15%... 16%... 17%... 18%... 19%... 20%... 21%... 22%... 23%... 24%... 25%... 26%... 27%... 28%... 29%... 30%... 31%... 32%... 33%... 34%... 35%... 36%... 37%... 38%... 39%... 39%... 40%... 41%... 43%... 44%... 45%... 46%... 46%... 48%... 49%... 50%... 50%... 51%... 52%... 53%... 54%... 55%... 56%... 56%... 57%... 58%... 59%... 60%... 61%... 61%... 63%... 64%... 65%... 66%... 67%... 68%... 70%... 70%... 72%... 72%... 73%... 74%... 75%... 76%... 78%... 79%... 80%... 80%... 81%... 82%... 83%... 84%... 86%... 86%... 87%... 88%... 90%... 91%... 92%... 93%... 94%... 95%... 96%... 97%... 99%... 100%    finished (0:05:25) --> added 
+## ... 0%... 1%... 1%... 3%... 4%... 5%... 6%... 7%... 8%... 9%... 10%... 11%... 12%... 13%... 14%... 15%... 16%... 18%... 18%... 19%... 20%... 21%... 22%... 23%... 24%... 25%... 26%... 28%... 28%... 29%... 30%... 31%... 32%... 33%... 34%... 35%... 36%... 37%... 38%... 39%... 39%... 40%... 41%... 42%... 43%... 44%... 45%... 46%... 47%... 48%... 49%... 50%... 51%... 52%... 53%... 54%... 54%... 55%... 56%... 57%... 58%... 59%... 60%... 61%... 61%... 63%... 64%... 65%... 66%... 67%... 68%... 70%... 70%... 72%... 72%... 73%... 75%... 75%... 77%... 78%... 79%... 80%... 81%... 82%... 83%... 84%... 85%... 86%... 87%... 88%... 90%... 91%... 92%... 93%... 94%... 95%... 96%... 98%... 100%    finished (0:05:25) --> added 
 ##     'fit_pars', fitted parameters for splicing dynamics (adata.var)
 ```
 
@@ -1227,7 +1239,7 @@ scv.tl.velocity(adata, mode = 'dynamical', min_r2 = 0.01, min_likelihood = 0.001
 
 ```
 ## computing velocities
-##     finished (0:00:01) --> added 
+##     finished (0:00:02) --> added 
 ##     'velocity', velocity vectors for each individual cell (adata.layers)
 ```
 
@@ -1270,7 +1282,7 @@ with scv.GridSpec(ncols = 5) as pl:
     pl.hist(df['fit_likelihood'], xlabel = 'fit likelihood', fontsize = 30)
 ```
 
-<img src="rna-velocity_files/figure-html/unnamed-chunk-5-1.png" width="3360" />
+<img src="rna-velocity_files/figure-html/plot-rate-distrs-1.png" width="3360" />
 
 ```{.python .pythonchunk}
 scv.get_df(adata, 'fit*', dropna = True).head()
@@ -1771,6 +1783,7 @@ sinfo()
 ## matplotlib  3.2.1
 ## numpy       1.18.4
 ## pandas      1.0.3
+## posixpath   NA
 ## scanpy      1.4.6
 ## scvelo      0.2.0
 ## sinfo       0.3.1
@@ -1779,7 +1792,7 @@ sinfo()
 ## Darwin-17.7.0-x86_64-i386-64bit
 ## 8 logical CPU cores, i386
 ## -----
-## Session information updated at 2020-05-25 13:51
+## Session information updated at 2020-05-25 20:53
 ```
 
 
