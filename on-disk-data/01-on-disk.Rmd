@@ -63,9 +63,33 @@ tenXdata <- h5read(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/
 
 ## Writing to HDF5 files
 
+As you probably expect, it's all possible to write data to HDF5 files.  This is probably a less frequent operation, either because you're processing a large amount of data into something smaller and don't need to use HDF5 to store or another piece of software does hte saving for you, but it useful to know and we will use further examples of this later to explore more properties of HDF5.
+
+In the example below we create a small matrix and write this to a dataset called `example_matrix`.  We then use `h5ls()` to confirm that it's been created.
+
 ```{r, write-1}
 ex_matrix <- matrix(1:10, nrow = 5, ncol = 2)
-h5write(ex_matrix, "../data/my_hdf5.h5","example_matrix")
+h5write(obj = ex_matrix, file = "../data/my_hdf5.h5", name = "example_matrix")
+h5ls("../data/my_hdf5.h5")
+```
+
+
+### Exercise 
+
+Try adding other objects to the HDF5 file.  Aspects you can try varying include:
+-  R data type e.g. integer, numeric, character, ...
+-  R object type e.g. matrix, vector, array, list, data.frame, ...
+-  HDF location - you can specify locations in the file hierarchy using `/` e.g. `/place/in/the/file`
+
+
+## Deleting parts of HDF5 files
+
+Wanting to re-save something is quite a common need - at some point we all realise we've made a mistake or updated some parameters and improved a particular anaylsis. What happens if you try and overwrite an existing group or dataset in an HDF5 file?  
+
+```{r, write-1}
+## we've grown out example matrix, and want to resave it.
+ex_matrix <- matrix(1:100, nrow = 5, ncol = 20)
+h5write(obj = ex_matrix, file = "../data/my_hdf5.h5", name = "example_matrix")
 ```
 
 
