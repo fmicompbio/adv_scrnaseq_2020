@@ -46,9 +46,13 @@ Use `h5ls()` to examine the other HDF5 files in the `data` folder.
 
 
 ```{r, h5dump}
-
 pbmc8k_list <- h5dump("../data/new_brain.h5")
+```
 
+This list is quite large and isn't going to be used again in this tutorial, so I recommend removing it from your R session so you do not run out of RAM.
+
+```{r, cleanup-1}
+rm(pbmc8k_list)
 ```
 
 
@@ -57,9 +61,25 @@ tenXdata <- h5read(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/
 ```
 
 
+## Writing to HDF5 files
+
+```{r, write-1}
+ex_matrix <- matrix(1:10, nrow = 5, ncol = 2)
+h5write(ex_matrix, "../data/my_hdf5.h5","example_matrix")
+```
 
 
+```{r h5delete1}
+h5ls("../data/my_hdf5.h5", recursive=2)
+file.size("../data/my_hdf5.h5")
+```
 
+
+```{r h5delete2}
+h5delete(file = "../data/my_hdf5.h5", name = "example_matrix")
+h5ls("../data/my_hdf5.h5", recursive=2)
+file.size("../data/my_hdf5.h5")
+```
 
 
 
