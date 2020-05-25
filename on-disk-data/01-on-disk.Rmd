@@ -86,20 +86,18 @@ Try adding other objects to the HDF5 file.  Aspects you can try varying include:
 
 Wanting to re-save something is quite a common need - at some point we all realise we've made a mistake or updated some parameters and improved a particular anaylsis. What happens if you try and overwrite an existing group or dataset in an HDF5 file?  
 
-```{r, write-1}
+```{r, write-2}
 ## we've grown out example matrix, and want to resave it.
 ex_matrix <- matrix(1:100, nrow = 5, ncol = 20)
 h5write(obj = ex_matrix, file = "../data/my_hdf5.h5", name = "example_matrix")
 ```
 
 
+If you need to remove a group or dataset from an HDF5 file you can use `h5delete()`.  Here we verify that removing a dataset means that it no longer shows up when we list the contents, and the file size has been reduced by the removal.
+
+
 ```{r h5delete1}
-h5ls("../data/my_hdf5.h5", recursive=2)
 file.size("../data/my_hdf5.h5")
-```
-
-
-```{r h5delete2}
 h5delete(file = "../data/my_hdf5.h5", name = "example_matrix")
 h5ls("../data/my_hdf5.h5", recursive=2)
 file.size("../data/my_hdf5.h5")

@@ -15,6 +15,31 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 10X Genomics
+
+Feature-barcode matrices 
+
+```
+genome
+├── barcodes
+├── data
+├── gene_names
+├── genes
+├── indices
+├── indptr
+└── shape
+```
+
+### Exercise
+
+Can you construct an R matrix from the data in the 10X file?
+
+Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them.
+
+```{r}
+
+```
+
 
 # HDF5Array
 
@@ -24,6 +49,8 @@ library(DropletUtils)
 library(LoomExperiment)
 library(Seurat)
 ```
+
+
 
 ```{r}
 
