@@ -371,6 +371,9 @@ ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, colour=Species)) +
 ```
 
 ```{python, class.source="pythonchunk", fig.width=4.5, fig.height=4.5}
+import matplotlib
+matplotlib.use('Agg', force = True)
+
 import matplotlib.pyplot as plt
 
 groups = pyiris.groupby('Species')
