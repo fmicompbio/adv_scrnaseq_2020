@@ -15,29 +15,69 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Single-cell datasets can be extremely large.
+
+This sparsity provides a few options for storing and distributing single-cell count matrices in an efficient manner.  Typically this falls into one of two categories: 
+- Store a sparse representation of the matrix by recording only the non-zero values and an index of which row and column the value comes from.  This relies on the matrix being sparse enough, that the cost of storing the indices doesn't outway discarding the zero entries.
+- Store the complete 2-dimensional matrix and rely on compression techniques to reduce the file size.  Here no additional data are stored, but for very sparse matrices the compression will not necessaril be as efficient as removing the zero values entirely.
+
+It is of course possible to combine these approaches and compress a sparse representation, but the effect will be less dramatic.
+
+
 # 10X Genomics
 
-Feature-barcode matrices 
+10X provide their count matrices (referred to as "Feature-barcode matrices") using the sparse representation.  The follwing is taken from the 10X documentation available (here)[https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices].
+
 
 ```
-genome
-├── barcodes
-├── data
-├── gene_names
-├── genes
-├── indices
-├── indptr
-└── shape
+(root)
+└── matrix [HDF5 group]
+    ├── barcodes
+    ├── data
+    ├── indices
+    ├── indptr
+    ├── shape
+    └── features [HDF5 group]
+        ├─ _all_tag_keys
+        ├─ feature_type
+        ├─ genome
+        ├─ id
+        ├─ name
+        ├─ pattern [Feature Barcoding only]
+        ├─ read [Feature Barcoding only]
+        └─ sequence [Feature Barcoding only]
+```
+
+| Column   | Description |
+| --       | ------------ |
+| barcodes | Barcode sequences |
+| data     | Nonzero UMI counts in column-major order |
+| indices  | Zero-based row index of corresponding element in data |
+| indptr   | Zero-based index into data / indices of the start of each column, i.e., the data corresponding to each barcode sequence |
+| shape    | Matrix dimensions (# rows, # columns) |
+
+
+The file `neuron_1k_v3_filtered_feature_bc_matrix.h5` is an example of the 
+
+```{r, tenX-h5ls}
+library(rhdf5)
+h5ls("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
 ```
 
 ### Exercise
 
 Can you construct an R matrix from the data in the 10X file?
 
-Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them.
 
 ```{r}
 
+```
+
+Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them.
+
+```{r}
+library(DropletUtils)
+library(Seurat)
 ```
 
 
@@ -45,9 +85,7 @@ Most of the time you don't need to worry about the structure of these files, as 
 
 ```{r}
 library(HDF5Array)
-library(DropletUtils)
 library(LoomExperiment)
-library(Seurat)
 ```
 
 
