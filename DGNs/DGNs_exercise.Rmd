@@ -37,8 +37,8 @@ library(reticulate)
 #reticulate::use_virtualenv("/opt/conda")
 
 ## Only for xenon6 setup:
-#reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.3.0-tensorflow-2.0.0-gpu/") # Use TF2
-reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.2.5-tensorflow-1.14.0-gpu") # Use TF1
+reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.3.0-tensorflow-2.0.0-gpu/") # Use TF2
+#reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.2.5-tensorflow-1.14.0-gpu") # Use TF1
 Sys.setenv("CUDA_VISIBLE_DEVICES" = "3" )
 
 reticulate::py_config()
@@ -112,8 +112,6 @@ the data will be shaped as a multidimensional array with the sample in the 1st d
 
 ```{r}
 combined.df.filtered <- as.matrix(assays(sce )[["lognorm"]] )  
-
-
 
 ####### Splitting in training and validation data, converting to array
 set.seed(1)
@@ -359,7 +357,9 @@ history <- vae %>% fit(
     #callbacks = list(tnsrb, early_stopping, lr_sch )
 )
 
-saveRDS(history, file="RData/MG_complete_VAE_history.rds")
+saveRDS(history, file="DGNs/data/MG_complete_VAE_history.rds")
+
+plot(history)
 
 filepath <- "/tungstenfs/groups/gbioinfo/papapana/DEEP_LEARNING/Autoencoders/BatchCor_paper/Trained_Models/MG_complete_VAE_weights.hdf5"
 #save_model_weights_hdf5(vae, filepath)  
@@ -537,10 +537,10 @@ reducedDim(sce, "vae_latent_bc" ) <- latent_output_bc
 reducedDim(sce, "PCA_decod_bc" ) <- rpca(decoded_data_bc ,k=32, retx=TRUE, center=TRUE, scale=FALSE)$x
 
 
-reducedDim(sce, "TSNE_PCA_decod" ) <- Rtsne(  reducedDim(sce,"PCA_decod"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads = 8, theta=0.3)$Y
-reducedDim(sce, "TSNE_vae_latent" ) <- Rtsne( reducedDim(sce,"vae_latent"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads = 8,   theta=0.3)$Y
-reducedDim(sce, "TSNE_vae_latent_bc" ) <- Rtsne( reducedDim(sce,"vae_latent_bc"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads = 8,  theta=0.3)$Y
-reducedDim(sce, "TSNE_PCA_decod_bc" ) <- Rtsne(reducedDim(sce,"PCA_decod_bc"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads = 8,   theta=0.3)$Y
+reducedDim(sce, "TSNE_PCA_decod" ) <- Rtsne(  reducedDim(sce,"PCA_decod"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads =8, theta=0.3)$Y
+reducedDim(sce, "TSNE_vae_latent" ) <- Rtsne( reducedDim(sce,"vae_latent"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads =8,   theta=0.3)$Y
+reducedDim(sce, "TSNE_vae_latent_bc" ) <- Rtsne( reducedDim(sce,"vae_latent_bc"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads =8,  theta=0.3)$Y
+reducedDim(sce, "TSNE_PCA_decod_bc" ) <- Rtsne(reducedDim(sce,"PCA_decod_bc"), perplexity = 30, initial_dims=32, pca=FALSE, num_threads =8,   theta=0.3)$Y
 
 
 
