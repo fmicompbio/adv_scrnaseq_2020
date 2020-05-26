@@ -56,21 +56,44 @@ It is of course possible to combine these approaches and compress a sparse repre
 | indptr   | Zero-based index into data / indices of the start of each column, i.e., the data corresponding to each barcode sequence |
 | shape    | Matrix dimensions (# rows, # columns) |
 
+** It's worth noting that the exact file format has changed over time, and probably will continue to do so, to reflect changes in experimental protocols and software.  However the broad sparse matrix layout has remained consistent.**
 
-The file `neuron_1k_v3_filtered_feature_bc_matrix.h5` is an example of the 
+The file `neuron_1k_v3_filtered_feature_bc_matrix.h5` is an example of a feature / cell matrix produced by Cell Ranger 3.0.0, and we can verify that it's structure matches the schematic above using the `h5ls()` command we saw previously.  If you are provided with an HDF5 file of unknown provenance, an initial glance at the structure can often tell you a lot about how it was produced.
 
 ```{r, tenX-h5ls}
 library(rhdf5)
 h5ls("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
 ```
 
+The sparse structure is efficient for storage
+
 ### Exercise
 
-Can you construct an R matrix from the data in the 10X file?
+Can you construct an R matrix of counts from the data in the 10X file?  
+
+Hints: 
+    - You can read the whole file into a list with `h5dump()`
+    - Note these indices are zero-based and R is one-based
+    - The `shape` represents the final matrix dimensions
+    - Items in `indptr` denote the start of 'blocks' of values in `indices` and `data` (there should be as many 'blocks' as there are columns)
+    - `indptr` also includes the last element 
+    - Values in `indices` correspond to rows in the appropriate column
 
 
 ```{r}
+tenx <- h5dump("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
+mat <- matrix(0, nrow = tenx$matrix$shape[1], ncol = tenx$matrix$shape[2])
+start_idx <- head( tenx$matrix$indptr, -1 ) + 1
+end_idx <- tail( tenx$matrix$indptr, -1 )
+             
+for(i in seq_along(start_idx)) {
+    
+    row_indices <- tenx$matrix$indices[ start_idx[i]:end_idx[i] ]+1
+    
+    mat[ row_indices, i ] <- tenx$matrix$data[ start_idx[i]:end_idx[i] ]
+}
 
+colnames(mat) <- tenx$matrix$barcodes
 ```
 
 Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them.
@@ -85,7 +108,10 @@ library(Seurat)
 
 ```{r}
 library(HDF5Array)
-library(LoomExperiment)
+```
+
+```{r, hdf5array-tenx}
+HDF5Array::TENxMatrix(filepath = "../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5", group = "matrix")
 ```
 
 
