@@ -1,8 +1,9 @@
 ## Information
 
-Material for the Spatial Part of the course "**_Advanced topics in single-cell transcriptomics_** 
+Material for the Spatial Part of the course "**_Advanced topics in single-cell transcriptomics_**"
 
 **Date*** : 2020-05-30
+
 **Teacher** : Alma Andersson
 
 ## Structure
