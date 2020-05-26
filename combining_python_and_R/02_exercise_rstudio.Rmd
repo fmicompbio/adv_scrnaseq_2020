@@ -173,6 +173,8 @@ will be initialized by that function:
 if (Sys.info()["nodename"] == "xenon6.fmi.ch") { getwd()
     Sys.setenv(PYTHONPATH = file.path(getwd(), "pythonlib"))
     Sys.setenv(RETICULATE_PYTHON = "/usr/bin/python3.6")
+} else {
+    Sys.setenv(RETICULATE_PYTHON = "/opt/conda/bin/python3")
 }
 
 # print config (will initialize Python bindings)
