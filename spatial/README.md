@@ -1,6 +1,8 @@
 ## Information
 
-Material for the Spatial Part of the course "_Advanced topics in single-cell transcriptomics_"
+Material for the Spatial Part of the course "_Advanced topics in single-cell transcriptomics_** given 2020-05-27 to 2020-05-30
+
+**Teacher** : Alma Andersson
 
 ## Structure
 
@@ -9,9 +11,8 @@ Material for the Spatial Part of the course "_Advanced topics in single-cell tra
 * `slides` - lecture slides
 
 
-## Setup
-
-The recommended setup is that you copy this directory (`spatial`) into your renku environment. Once this is done, you need to unzip the data files, to do so : In your renku environment open a terminal window and `cd` into the `data` folder. Then simply do enter
+## Setup 
+Before starting with the exercises, you need to decompress the data files. To do this : in your renku environment open a terminal window and `cd` into the `data` folder. Then simply do :
 
 ```sh
 
