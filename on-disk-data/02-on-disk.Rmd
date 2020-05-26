@@ -15,29 +15,92 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Single-cell datasets can be extremely large.
+
+This sparsity provides a few options for storing and distributing single-cell count matrices in an efficient manner.  Typically this falls into one of two categories: 
+- Store a sparse representation of the matrix by recording only the non-zero values and an index of which row and column the value comes from.  This relies on the matrix being sparse enough, that the cost of storing the indices doesn't outway discarding the zero entries.
+- Store the complete 2-dimensional matrix and rely on compression techniques to reduce the file size.  Here no additional data are stored, but for very sparse matrices the compression will not necessaril be as efficient as removing the zero values entirely.
+
+It is of course possible to combine these approaches and compress a sparse representation, but the effect will be less dramatic.
+
+
 # 10X Genomics
 
-Feature-barcode matrices 
+10X provide their count matrices (referred to as "Feature-barcode matrices") using the sparse representation.  The follwing is taken from the 10X documentation available (here)[https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices].
+
 
 ```
-genome
-├── barcodes
-├── data
-├── gene_names
-├── genes
-├── indices
-├── indptr
-└── shape
+(root)
+└── matrix [HDF5 group]
+    ├── barcodes
+    ├── data
+    ├── indices
+    ├── indptr
+    ├── shape
+    └── features [HDF5 group]
+        ├─ _all_tag_keys
+        ├─ feature_type
+        ├─ genome
+        ├─ id
+        ├─ name
+        ├─ pattern [Feature Barcoding only]
+        ├─ read [Feature Barcoding only]
+        └─ sequence [Feature Barcoding only]
 ```
+
+| Column   | Description |
+| --       | ------------ |
+| barcodes | Barcode sequences |
+| data     | Nonzero UMI counts in column-major order |
+| indices  | Zero-based row index of corresponding element in data |
+| indptr   | Zero-based index into data / indices of the start of each column, i.e., the data corresponding to each barcode sequence |
+| shape    | Matrix dimensions (# rows, # columns) |
+
+** It's worth noting that the exact file format has changed over time, and probably will continue to do so, to reflect changes in experimental protocols and software.  However the broad sparse matrix layout has remained consistent.**
+
+The file `neuron_1k_v3_filtered_feature_bc_matrix.h5` is an example of a feature / cell matrix produced by Cell Ranger 3.0.0, and we can verify that it's structure matches the schematic above using the `h5ls()` command we saw previously.  If you are provided with an HDF5 file of unknown provenance, an initial glance at the structure can often tell you a lot about how it was produced.
+
+```{r, tenX-h5ls}
+library(rhdf5)
+h5ls("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
+```
+
+The sparse structure is efficient for storage
 
 ### Exercise
 
-Can you construct an R matrix from the data in the 10X file?
+Can you construct an R matrix of counts from the data in the 10X file?  
+
+Hints: 
+    - You can read the whole file into a list with `h5dump()`
+    - Note these indices are zero-based and R is one-based
+    - The `shape` represents the final matrix dimensions
+    - Items in `indptr` denote the start of 'blocks' of values in `indices` and `data` (there should be as many 'blocks' as there are columns)
+    - `indptr` also includes the last element 
+    - Values in `indices` correspond to rows in the appropriate column
+
+
+```{r}
+tenx <- h5dump("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
+mat <- matrix(0, nrow = tenx$matrix$shape[1], ncol = tenx$matrix$shape[2])
+start_idx <- head( tenx$matrix$indptr, -1 ) + 1
+end_idx <- tail( tenx$matrix$indptr, -1 )
+             
+for(i in seq_along(start_idx)) {
+    
+    row_indices <- tenx$matrix$indices[ start_idx[i]:end_idx[i] ]+1
+    
+    mat[ row_indices, i ] <- tenx$matrix$data[ start_idx[i]:end_idx[i] ]
+}
+
+colnames(mat) <- tenx$matrix$barcodes
+```
 
 Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them.
 
 ```{r}
-
+library(DropletUtils)
+library(Seurat)
 ```
 
 
@@ -45,9 +108,10 @@ Most of the time you don't need to worry about the structure of these files, as 
 
 ```{r}
 library(HDF5Array)
-library(DropletUtils)
-library(LoomExperiment)
-library(Seurat)
+```
+
+```{r, hdf5array-tenx}
+HDF5Array::TENxMatrix(filepath = "../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5", group = "matrix")
 ```
 
 
