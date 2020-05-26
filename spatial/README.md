@@ -20,5 +20,10 @@ gunzip -r *
 
 ```
 
+For additional clarity, the animation below illustrate this procedure as well:
+
+<img src="imgs/instr.gif" width="80%" height="80%">
+
+
 After this you should be ready to go! Open up the notebook called `Part 1` to get started.
 
