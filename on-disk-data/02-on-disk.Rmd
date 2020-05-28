@@ -56,7 +56,7 @@ It is of course possible to combine these approaches and compress a sparse repre
 | indptr   | Zero-based index into data / indices of the start of each column, i.e., the data corresponding to each barcode sequence |
 | shape    | Matrix dimensions (# rows, # columns) |
 
-** It's worth noting that the exact file format has changed over time, and probably will continue to do so, to reflect changes in experimental protocols and software.  However the broad sparse matrix layout has remained consistent.**
+** It's worth noting that the exact file format has changed over time, and probably will continue to do so, to reflect changes in experimental protocols and software.  However the broad sparse matrix layout has remained consistent.  You can examples of 10X files generted with previous versions of Cell Ranger at https://support.10xgenomics.com/single-cell-gene-expression/datasets **
 
 The file `neuron_1k_v3_filtered_feature_bc_matrix.h5` is an example of a feature / cell matrix produced by Cell Ranger 3.0.0, and we can verify that it's structure matches the schematic above using the `h5ls()` command we saw previously.  If you are provided with an HDF5 file of unknown provenance, an initial glance at the structure can often tell you a lot about how it was produced.
 
@@ -65,7 +65,7 @@ library(rhdf5)
 h5ls("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
 ```
 
-The sparse structure is efficient for storage
+The sparse structure is efficient for storage and transfer, but not necessarily the easiest concept to work with directly.  It's likely that in your work you probably still want to interact with the counts as if they were a matrix with rows and columns.
 
 ### Exercise
 
@@ -78,7 +78,10 @@ Hints:
     - Items in `indptr` denote the start of 'blocks' of values in `indices` and `data` (there should be as many 'blocks' as there are columns)
     - `indptr` also includes the last element 
     - Values in `indices` correspond to rows in the appropriate column
+    
+You can verify your solution by checking the sums of the values in the first 10 columns - these should be:
 
+`1023  7210  9883  5290 18676 20196   716  6448 16837  2065`
 
 ```{r}
 tenx <- h5dump("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
@@ -96,19 +99,39 @@ for(i in seq_along(start_idx)) {
 colnames(mat) <- tenx$matrix$barcodes
 ```
 
-Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them.
+Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them and you hope the others of that software keep up-to-date with any changes to the file structure.
 
-```{r}
+```{r, reading-with-packages}
 library(DropletUtils)
 library(Seurat)
+DropletUtils::read10xCounts("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
+Seurat::Read10X_h5("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
 ```
 
+# Complete matrix
 
-# HDF5Array
+Formats such as loom as well as many of the software tools found in Bioconductor use the alternative approach and store the entire 2-dimensional matrix, including zeros, on disk.
+
+```{r}
+h5ls('../data/on-disk-data/L1_DRG_20_example.loom', recursive = FALSE)
+```
+
+In cases like this we can directly read the data into an R matrix without any further processing.
+
+```{r}
+h5read('../data/on-disk-data/L1_DRG_20_example.loom', name = "matrix")
+```
+
+## Working only with arrays
+
+If you're interested in performing operations on single HDF5 dataset the HDF5Array package provides a neat interface.  Many of the Bioconductor classes for representing single-cell data (e.g. SingleCellExperiment) make use of this.  Here the meta data (Sample names, genes, etc) are stored in memory, but the actual count matrix is held on disk.
 
 ```{r}
 library(HDF5Array)
+HDF5Array(filepath = '../data/on-disk-data/L1_DRG_20_example.loom', name = "matrix")
 ```
+
+The HDF5Array package is also aware of the 10X sparse structure, and can read this directly.  **Note: the argument to specify where the counts are in the file is now 'group' rather than 'name', as multiple datasets are used in the 10X format.**.
 
 ```{r, hdf5array-tenx}
 HDF5Array::TENxMatrix(filepath = "../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5", group = "matrix")
