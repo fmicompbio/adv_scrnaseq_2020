@@ -15,11 +15,10 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# HDF5
+# Using the rhdf5 package
 
 ```{r, message = FALSE}
 library(rhdf5)
-library(HDF5Array)
 ```
 
 ```{r, fig-1, echo = FALSE, fig.cap = "Example HDF5 file structure"}
@@ -33,7 +32,7 @@ To start with we're going to look at and HDF5 file produced by 10X Genomics (the
 First, lets start with the function `h5ls()`:
 
 ```{r, h5ls}
-h5ls(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5')
+h5ls(file = '../data/on-disk-data/pbmc8k_raw_gene_bc_matrices_h5.h5')
 ```
 
 The output from `h5ls()` gives us an overview of the structure of the file, without really showing us the content.  We can see `pbmc8k_raw_gene_bc_matrices_h5.h5` contains a single group (GRCh38) and within that group there are many datasets.  We can also see what type of data each dataset contains (the `dclass` column).
@@ -46,7 +45,7 @@ Use `h5ls()` to examine the other HDF5 files in the `data` folder.
 
 
 ```{r, h5dump}
-pbmc8k_list <- h5dump("../data/new_brain.h5")
+pbmc8k_list <- h5dump("../data/on-disk-data/pbmc8k_raw_gene_bc_matrices_h5.h5")
 ```
 
 This list is quite large and isn't going to be used again in this tutorial, so I recommend removing it from your R session so you do not run out of RAM.
@@ -55,9 +54,11 @@ This list is quite large and isn't going to be used again in this tutorial, so I
 rm(pbmc8k_list)
 ```
 
+Sometimes you don't want to read the entire file, just a particular dataset.  **rhdf5** includes the function `h5read()`, which requires a file path and the `name` argument to identify the dataset you want within the hierarchy.
+
 
 ```{r, pbmc1}
-tenXdata <- h5read(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/GRCh38/data")
+pbmc8k_data <- h5read(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/GRCh38/data")
 ```
 
 
@@ -69,10 +70,9 @@ In the example below we create a small matrix and write this to a dataset called
 
 ```{r, write-1}
 ex_matrix <- matrix(1:10, nrow = 5, ncol = 2)
-h5write(obj = ex_matrix, file = "../data/my_hdf5.h5", name = "example_matrix")
-h5ls("../data/my_hdf5.h5")
+h5write(obj = ex_matrix, file = "../data/on-disk-data/my_hdf5.h5", name = "example_matrix")
+h5ls("../data/on-disk-data/my_hdf5.h5")
 ```
-
 
 ### Exercise 
 
@@ -81,28 +81,36 @@ Try adding other objects to the HDF5 file.  Aspects you can try varying include:
 -  R object type e.g. matrix, vector, array, list, data.frame, ...
 -  HDF location - you can specify locations in the file hierarchy using `/` e.g. `/place/in/the/file`
 
+```{r, your-own-examples}
+## use h5write() to try adding other things to a file
+```
+
 
 ## Deleting parts of HDF5 files
 
-Wanting to re-save something is quite a common need - at some point we all realise we've made a mistake or updated some parameters and improved a particular anaylsis. What happens if you try and overwrite an existing group or dataset in an HDF5 file?  
+Wanting to re-save something is quite a common need - at some point we all realise we've made a mistake or updated some parameters and improved a particular analysis. What happens if you try and overwrite an existing group or dataset in an HDF5 file?  What about 
 
 ```{r, write-2}
-## we've grown out example matrix, and want to resave it.
+## we've grown our example matrix, and want to resave it.
 ex_matrix <- matrix(1:100, nrow = 5, ncol = 20)
-h5write(obj = ex_matrix, file = "../data/my_hdf5.h5", name = "example_matrix")
+h5write(obj = ex_matrix, file = "../data/on-disk-data/my_hdf5.h5", name = "example_matrix")
 ```
-
 
 If you need to remove a group or dataset from an HDF5 file you can use `h5delete()`.  Here we verify that removing a dataset means that it no longer shows up when we list the contents, and the file size has been reduced by the removal.
 
 
 ```{r h5delete1}
-file.size("../data/my_hdf5.h5")
-h5delete(file = "../data/my_hdf5.h5", name = "example_matrix")
-h5ls("../data/my_hdf5.h5", recursive=2)
-file.size("../data/my_hdf5.h5")
+file.size("../data/on-disk-data/my_hdf5.h5")
+h5delete(file = "../data/on-disk-data/my_hdf5.h5", name = "example_matrix")
+h5ls("../data/on-disk-data/my_hdf5.h5")
+file.size("../data/on-disk-data/my_hdf5.h5")
 ```
 
+## Reading attributes
 
+Sometimes important meta-data is stored in attributes associated with groups or datasets.  We can use the `all = TRUE` option in `h5ls()` to list the number of attributes (along with other data), and `h5readAttributes()` to extract these in a similar fashion to before.
 
-
+```{r}
+h5ls("../data/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad", all = TRUE)
+h5readAttributes(file = "../data/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad", name = "X")
+```

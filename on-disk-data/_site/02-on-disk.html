@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Mike Smith" />
+
+
+<title>Exploring single-cell file types</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 60px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h2 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h3 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h4 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h5 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h6 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">On-disk-data</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="01-on-disk.html">Introducing HDF5 files</a>
+</li>
+<li>
+  <a href="02-on-disk.html">Exploring single-cell HDF5 file types</a>
+</li>
+<li>
+  <a href="03-on-disk.html">Using HDF5 efficiently</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Exploring single-cell file types</h1>
+<h4 class="author">Mike Smith</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#x-genomics">10X Genomics</a></li>
+<li><a href="#complete-dense-matrix">Complete dense matrix</a><ul>
+<li><a href="#working-only-with-arrays">Working only with arrays</a></li>
+</ul></li>
+</ul>
+</div>
+
+<p>Single-cell datasets can be extremely large, but are typically also very sparse. This sparsity provides a few options for storing and distributing single-cell count matrices in an efficient manner. Generally this falls into one of two categories: - Store a sparse representation of the matrix by recording only the non-zero values and an index of which row and column the value comes from. This relies on the matrix being sparse enough, that the cost of storing the indices doesn’t outweigh discarding the zero entries. - Store the complete 2-dimensional matrix and rely on compression techniques to reduce the file size. Here no additional data are stored, but for very sparse matrices the compression will not necessarily be as efficient as removing the zero values entirely.</p>
+<p>It is of course possible to combine these approaches and compress a sparse representation, but the effect will be less dramatic.</p>
+<div id="x-genomics" class="section level1">
+<h1>10X Genomics</h1>
+<p>10X provide their count matrices (referred to as “Feature-barcode matrices”) using the sparse representation. The following is taken from the 10X documentation available (here)[<a href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices" class="uri">https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices</a>].</p>
+<pre><code>(root)
+└── matrix [HDF5 group]
+    ├── barcodes
+    ├── data
+    ├── indices
+    ├── indptr
+    ├── shape
+    └── features [HDF5 group]
+        ├─ _all_tag_keys
+        ├─ feature_type
+        ├─ genome
+        ├─ id
+        ├─ name
+        ├─ pattern [Feature Barcoding only]
+        ├─ read [Feature Barcoding only]
+        └─ sequence [Feature Barcoding only]</code></pre>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="85%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>barcodes</td>
+<td>Barcode sequences</td>
+</tr>
+<tr class="even">
+<td>data</td>
+<td>Nonzero UMI counts in column-major order</td>
+</tr>
+<tr class="odd">
+<td>indices</td>
+<td>Zero-based row index of corresponding element in data</td>
+</tr>
+<tr class="even">
+<td>indptr</td>
+<td>Zero-based index into data / indices of the start of each column, i.e., the data corresponding to each barcode sequence</td>
+</tr>
+<tr class="odd">
+<td>shape</td>
+<td>Matrix dimensions (# rows, # columns)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>It’s worth noting that the exact file format has changed over time, and probably will continue to do so, to reflect changes in experimental protocols and software. However the broad sparse matrix layout has remained consistent. You can examples of 10X files generated with previous versions of Cell Ranger (here)[<a href="https://support.10xgenomics.com/single-cell-gene-expression/datasets" class="uri">https://support.10xgenomics.com/single-cell-gene-expression/datasets</a>]</strong></p>
+<p>The file <code>neuron_1k_v3_filtered_feature_bc_matrix.h5</code> is an example of a feature / cell matrix produced by Cell Ranger 3.0.0, and we can verify that it’s structure matches the schematic above using the <code>h5ls()</code> command we saw previously. If you are provided with an HDF5 file of unknown provenance, an initial glance at the structure can often tell you a lot about how it was produced.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(rhdf5)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">h5ls</span>(<span class="st">&quot;../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5&quot;</span>)</span></code></pre></div>
+<pre><code>##               group          name       otype  dclass     dim
+## 0                 /        matrix   H5I_GROUP                
+## 1           /matrix      barcodes H5I_DATASET  STRING    1301
+## 2           /matrix          data H5I_DATASET INTEGER 4220492
+## 3           /matrix      features   H5I_GROUP                
+## 4  /matrix/features _all_tag_keys H5I_DATASET  STRING       1
+## 5  /matrix/features  feature_type H5I_DATASET  STRING   31053
+## 6  /matrix/features        genome H5I_DATASET  STRING   31053
+## 7  /matrix/features            id H5I_DATASET  STRING   31053
+## 8  /matrix/features          name H5I_DATASET  STRING   31053
+## 9           /matrix       indices H5I_DATASET INTEGER 4220492
+## 10          /matrix        indptr H5I_DATASET INTEGER    1302
+## 11          /matrix         shape H5I_DATASET INTEGER       2</code></pre>
+<p>The sparse structure is efficient for storage and transfer, but not necessarily the easiest concept to work with directly. It’s likely that in your work you probably still want to interact with the counts as if they were a matrix with rows and columns.</p>
+<div class="figure">
+<img src="images/sparse_structure.png" alt="Representing a matrix as three vectors in the compressed sparse column format" width="100%" />
+<p class="caption">
+Representing a matrix as three vectors in the compressed sparse column format
+</p>
+</div>
+<div id="exercise" class="section level3">
+<h3>Exercise</h3>
+<p>Can you construct an R matrix of counts from the data in the 10X file?</p>
+<p>Hints: - You can read the whole file into a list with <code>h5dump()</code> - Note these indices are zero-based and R is one-based - The <code>shape</code> represents the final matrix dimensions - Items in <code>indptr</code> denote the start of ‘blocks’ of values in <code>indices</code> and <code>data</code> (there should be as many ‘blocks’ as there are columns) - <code>indptr</code> also includes the last element - Values in <code>indices</code> correspond to rows in the appropriate column</p>
+<p>You can verify your solution by checking the sums of the values in the first 10 columns - these should be:</p>
+<p><code>1023  7210  9883  5290 18676 20196   716  6448 16837  2065</code></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">## Insert your code here</span></span></code></pre></div>
+<p>Most of the time you don’t need to worry about the structure of these files, as you’ll be using other software to read them and you hope the others of that software keep up-to-date with any changes to the file structure.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">library</span>(DropletUtils)</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">library</span>(Seurat)</span>
+<span id="cb5-3"><a href="#cb5-3"></a>DropletUtils<span class="op">::</span><span class="kw">read10xCounts</span>(<span class="st">&quot;../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5&quot;</span>)</span></code></pre></div>
+<pre><code>## class: SingleCellExperiment 
+## dim: 31053 1301 
+## metadata(1): Samples
+## assays(1): counts
+## rownames(31053): ENSMUSG00000051951 ENSMUSG00000089699 ... ENSMUSG00000096730 ENSMUSG00000095742
+## rowData names(3): ID Symbol Type
+## colnames: NULL
+## colData names(2): Sample Barcode
+## reducedDimNames(0):
+## altExpNames(0):</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>Seurat<span class="op">::</span><span class="kw">Read10X_h5</span>(<span class="st">&quot;../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5&quot;</span>)</span></code></pre></div>
+<pre><code>## 31053 x 1301 sparse Matrix of class &quot;dgCMatrix&quot;</code></pre>
+<pre><code>##    [[ suppressing 53 column names &#39;AAACGAATCAAAGCCT-1&#39;, &#39;AAACGCTGTAATGTGA-1&#39;, &#39;AAACGCTGTCCTGGGT-1&#39; ... ]]
+##    [[ suppressing 53 column names &#39;AAACGAATCAAAGCCT-1&#39;, &#39;AAACGCTGTAATGTGA-1&#39;, &#39;AAACGCTGTCCTGGGT-1&#39; ... ]]</code></pre>
+<pre><code>##                                                                                                                         
+## Xkr4    . . . . . . . . . . . . . . . . . . . . 1 . 7 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## Gm1992  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## Gm37381 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## Rp1     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## Sox17   . . . . 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1 . . . . . . . . . . . ......
+## Gm37323 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## Mrpl15  . 2 1 . 2 . . . 1 . . . . 4 . . . 1 . . 1 . 3 2 . . 1 . 3 . . . 3 . 2 . . . . . . 2 3 . 1 . 1 . 3 . 1 4 . ......
+## Lypla1  . . . . . . . . 1 . . 1 . 3 1 . 2 2 . . 1 . . . . . 1 . . . . . . . . . 2 1 . . . . . . . . . . . . . . . ......
+## Gm37988 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## 
+##  ..............................
+##  ........suppressing 1248 columns and 31035 rows in show(); maybe adjust &#39;options(max.print= *, width = *)&#39;
+##  ..............................</code></pre>
+<pre><code>##    [[ suppressing 53 column names &#39;AAACGAATCAAAGCCT-1&#39;, &#39;AAACGCTGTAATGTGA-1&#39;, &#39;AAACGCTGTCCTGGGT-1&#39; ... ]]</code></pre>
+<pre><code>##                                                                                                                                
+## AC125149.2     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## AC125149.4     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## AC234645.1     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## AC168977.2     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## AC168977.1     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## AC149090.1     . . . . . 2 . . . . . 1 . 3 . . 1 1 . . 2 . 1 2 . . 1 2 . . . 1 3 2 . 1 . . . . 1 . 7 2 . . 1 1 . 2 . . . ......
+## CAAA01118383.1 . . 2 . . 1 . . 1 . . . . . . . . . . . . . . . . . 1 . 1 . . . . . 1 . . . . . . . 1 3 . . . . . . . . 1 ......
+## Vmn2r122       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......
+## CAAA01147332.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ......</code></pre>
+</div>
+</div>
+<div id="complete-dense-matrix" class="section level1">
+<h1>Complete dense matrix</h1>
+<p>Formats such as loom as well as many of the software tools found in Bioconductor use the alternative approach and store the entire 2-dimensional matrix, including zeros, on disk.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">h5ls</span>(<span class="st">&#39;../data/on-disk-data/L1_DRG_20_example.loom&#39;</span>, <span class="dt">recursive =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
+<pre><code>##   group       name       otype dclass     dim
+## 0     /  col_attrs   H5I_GROUP               
+## 1     / col_graphs   H5I_GROUP               
+## 2     /     layers   H5I_GROUP               
+## 3     /     matrix H5I_DATASET  FLOAT 20 x 20
+## 4     /  row_attrs   H5I_GROUP               
+## 5     / row_graphs   H5I_GROUP</code></pre>
+<p>In cases like this we can directly read the data into an R matrix without any further processing.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">h5read</span>(<span class="st">&#39;../data/on-disk-data/L1_DRG_20_example.loom&#39;</span>, <span class="dt">name =</span> <span class="st">&quot;matrix&quot;</span>)</span></code></pre></div>
+<pre><code>##       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14] [,15] [,16] [,17] [,18] [,19] [,20]
+##  [1,]   13    6    1    2    1    0    1    2    3     5     0     2     5     2     0     4     1     1    45     0
+##  [2,]   13    4    4    3    3    2    2    2    4     2     2     1     3     0     1     3     4     0    62     0
+##  [3,]   12    4    4    0    1    1    1    0    6     4     1     4     2     1     0     2     0     4    10     1
+##  [4,]    8    2    5    1    5    8    0    0    5     2     2     1     1     6     0     3     0     0     7     0
+##  [5,]   11    0    1    3    3    3    2    0    3     1     2     2     2     1     2     4     0     0     0     1
+##  [6,]    0    1    0    0    0    1    1    0    2     0     1     0     0     0     0     5     0     1     0     0
+##  [7,]   13    6    1    2    2    4    2    0   11     4     2     3     2     1     0     3     1     2    16     1
+##  [8,]    6    0    0    0    1    0    0    0    0     1     0     1     1     0     0     0     0     2     0     0
+##  [9,]    6    2    0    0    2    0    2    0    2     3     1     3     1     2     0     4     0     0    16     1
+## [10,]    9    2    0    0    1    2    1    1    5     5     0     3     1     1     0     6     0     2     5     1
+## [11,]    8    2    0    0    3    4    5    0    5     2     0     2     6     1     0     3     3     0     3     2
+## [12,]   11    3    1    0    3    3    2    0    4     3     1     4     1     0     0     7     1     0    21     0
+## [13,]    7    5    1    0    3    2    2    1    3     6     1     2     0     0     1     6     1     1    38     0
+## [14,]    2    2    2    1    2    1    2    0    2     5     0     1     2     0     2     5     0     0    25     0
+## [15,]    5    1    0    0    1    5    1    0    0     1     2     2     0     0     0     1     0     0    12     0
+## [16,]    4    4    0    0    0    1    0    0    3     4     0     2     3     0     0     2     0     0    17     0
+## [17,]    5    0    1    0    2    1    2    0    0     3     0     4     0     0     0     6     0     0     1     0
+## [18,]    6    0    0    1    2    0    2    0    1     0     3     2     3     0     0     2     0     0    43     0
+## [19,]    8    3    1    1    1    2    3    1    5     1     0     0     0     0     0     3     0     0     0     2
+## [20,]    6    2    4    0    0    3    2    0    2     2     1     4     3     0     0    10     0     2     4     0</code></pre>
+<div id="working-only-with-arrays" class="section level2">
+<h2>Working only with arrays</h2>
+<p>If you’re interested in performing operations on single HDF5 dataset the HDF5Array package provides a neat interface. Many of the Bioconductor classes for representing single-cell data (e.g. SingleCellExperiment) make use of this. Here the meta data (Sample names, genes, etc) are stored in memory, but the actual count matrix is held on disk.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">library</span>(HDF5Array)</span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="kw">HDF5Array</span>(<span class="dt">filepath =</span> <span class="st">&#39;../data/on-disk-data/L1_DRG_20_example.loom&#39;</span>, <span class="dt">name =</span> <span class="st">&quot;matrix&quot;</span>)</span></code></pre></div>
+<pre><code>## &lt;20 x 20&gt; matrix of class HDF5Matrix and type &quot;double&quot;:
+##        [,1]  [,2]  [,3] ... [,19] [,20]
+##  [1,]    13     6     1   .    45     0
+##  [2,]    13     4     4   .    62     0
+##  [3,]    12     4     4   .    10     1
+##  [4,]     8     2     5   .     7     0
+##  [5,]    11     0     1   .     0     1
+##   ...     .     .     .   .     .     .
+## [16,]     4     4     0   .    17     0
+## [17,]     5     0     1   .     1     0
+## [18,]     6     0     0   .    43     0
+## [19,]     8     3     1   .     0     2
+## [20,]     6     2     4   .     4     0</code></pre>
+<p>The HDF5Array package is also aware of the 10X sparse structure, and can read this directly. <strong>Note: the argument to specify where the counts are in the file is now ‘group’ rather than ‘name’, as multiple datasets are used in the 10X format.</strong>.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>HDF5Array<span class="op">::</span><span class="kw">TENxMatrix</span>(<span class="dt">filepath =</span> <span class="st">&quot;../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5&quot;</span>, <span class="dt">group =</span> <span class="st">&quot;matrix&quot;</span>)</span></code></pre></div>
+<pre><code>## &lt;31053 x 1301&gt; sparse matrix of class TENxMatrix and type &quot;integer&quot;:
+##          AAACGAATCAAAGCCT-1 AAACGCTGTAATGTGA-1 AAACGCTGTCCTGGGT-1 ... TTTGGAGAGGCTAACG-1 TTTGGTTAGTAATCCC-1
+##     [1,]                  0                  0                  0   .                  0                  1
+##     [2,]                  0                  0                  0   .                  0                  0
+##     [3,]                  0                  0                  0   .                  0                  0
+##     [4,]                  0                  0                  0   .                  0                  0
+##     [5,]                  0                  0                  0   .                  0                  0
+##      ...                  .                  .                  .   .                  .                  .
+## [31049,]                  0                  0                  0   .                  0                  0
+## [31050,]                  0                  0                  0   .                  0                  4
+## [31051,]                  0                  0                  2   .                  1                  0
+## [31052,]                  0                  0                  0   .                  0                  0
+## [31053,]                  0                  0                  0   .                  0                  0
+##          TTTGTTGGTATGGAAT-1
+##     [1,]                  0
+##     [2,]                  0
+##     [3,]                  0
+##     [4,]                  0
+##     [5,]                  0
+##      ...                  .
+## [31049,]                  0
+## [31050,]                  0
+## [31051,]                  0
+## [31052,]                  0
+## [31053,]                  0</code></pre>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -15,6 +15,7 @@ editor_options:
     
 ```{r}
 library(rhdf5)
+library(HDF5Array)
 ```
     
 ## Reading subsets of the data
@@ -45,11 +46,15 @@ Can you modify the code to read other sets of columns?  Instead of reading the f
 
 Hopefully you found that it takes a very similar amount of time to read five consecutive columns from anywhere in the file.  You should also notice that the time taken to read larger numbers of columns scales fairly linearly with the number of columns you want.
 
-In this case, where out HDF5 file just contains a counts matrix, the HDF5Array approach works equally well.
+In this case where our HDF5 file just contains a counts matrix, the HDF5Array approach works equally well.
 
 ```{r, reading-subset-hdf5a}
 HDF5Array::HDF5Array(filepath = "../data/on-disk-data//brain100k.h5", name = "/counts_matrix")
 ```
+
+### Exercise
+
+How does the timing scale with HDF5Array?
 
 
 ## Exploring the effect of chunk layout
@@ -61,34 +66,36 @@ knitr::include_graphics('images/Chunk_layout_1.png')
 knitr::include_graphics('images/Chunk_layout_2.png')
 ```
 
-```{r, eval = FALSE}
+We're going to write the same data multiple times, and take a look at how this effects the read performance.  First, lets get hold of a 10,000 cell matrix.
+
+```{r, eval = TRUE}
 brain_10k <- as.matrix(HDF5Array(file = "../data/on-disk-data/brain100k.h5", name = "/counts_matrix")[,1:10000])
+dim(brain_10k)
 ```
 
-```{r, eval = FALSE}
-h5createFile(file = "../data/on-disk-data/new_brain.h5")
-h5createDataset(file = "../data/on-disk-data/new_brain.h5", dataset = "one_chunk", 
-                dims = dim(brain_10k), storage.mode = "integer",
+rhdf5 doesn't provide access to the chunk dimension settings in `h5write()`.  Instead we have to use a two-step process, creating an empty dataset with `h5createDatatset()` and then writing to that with `h5write()`.  Here we create the dataset to consist of one single, very large, chunk.
+
+
+```{r, eval = TRUE}
+h5createFile(file = "../data/on-disk-data/one_chunk.h5")
+h5createDataset(file = "../data/on-disk-data/one_chunk.h5", 
+                dataset = "one_chunk", 
+                dims = dim(brain_10k), 
+                storage.mode = "integer",
                 chunk = c(nrow(brain_10k), ncol(brain_10k)))
-h5write(brain_10k, file = "../data/on-disk-data/new_brain.h5", name = "one_chunk")
-h5createDataset(file = "../data/on-disk-data/new_brain.h5", dataset = "square_chunks", 
-                dims = dim(brain_10k), storage.mode = "integer",
-                chunk = c(1000, 1000))
-h5write(brain_10k, file = "../data/on-disk-data/new_brain.h5", name = "square_chunks")
-h5createDataset(file = "../data/on-disk-data/new_brain.h5", dataset = "row_chunks", 
-                dims = dim(brain_10k), storage.mode = "integer",
-                chunk = c(1, ncol(brain_10k)))
-h5write(brain_10k, file = "../data/on-disk-data/new_brain.h5", name = "row_chunks")
-h5createDataset(file = "../data/on-disk-data/new_brain.h5", dataset = "col_chunks", 
-                dims = dim(brain_10k), storage.mode = "integer",
-                chunk = c(nrow(brain_10k), 1))
-h5write(brain_10k, file = "../data/on-disk-data/new_brain.h5", name = "col_chunks")
+h5write(brain_10k, file = "../data/on-disk-data/one_chunk.h5", name = "one_chunk")
 ```
+
+### Exercise
+
+Try creating other datasets with different chunk sizes.  You can pick whatever you like, but I suggest trying square chunks as well as the extremes of single-row or single-column chunks.  You can then again use `system.time()` to see how long it takes to read five columns:
 
 
 ```{r timing-chunks, results = "hold"}
-system.time( h5read(file = "../data/on-disk-data/new_brain.h5", name = "/one_chunk", index = list(NULL, 1:5)) )
-system.time( h5read(file = "../data/on-disk-data/new_brain.h5", name = "/square_chunks", index = list(NULL, 1:5)) )
-system.time( h5read(file = "../data/on-disk-data/new_brain.h5", name = "/row_chunks", index = list(NULL, 1:5)) )
-system.time( h5read(file = "../data/on-disk-data/new_brain.h5", name = "/col_chunks", index = list(NULL, 1:5)) )
+system.time( h5read(file = "../data/on-disk-data/one_chunk.h5", name = "/one_chunk", index = list(NULL, 1:5)) )
 ```
+
+
+We can also look at the file size to get an idea of how the compression is affected.
+
+

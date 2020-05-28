@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Mike Smith" />
+
+
+<title>Introducing HDF5 files</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 60px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h2 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h3 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h4 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h5 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h6 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">On-disk-data</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="01-on-disk.html">Introducing HDF5 files</a>
+</li>
+<li>
+  <a href="02-on-disk.html">Exploring single-cell HDF5 file types</a>
+</li>
+<li>
+  <a href="03-on-disk.html">Using HDF5 efficiently</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Introducing HDF5 files</h1>
+<h4 class="author">Mike Smith</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#using-the-rhdf5-package">Using the rhdf5 package</a><ul>
+<li><a href="#exploring-an-hdf5-file">Exploring an HDF5 file</a></li>
+<li><a href="#reading-from-hdf5-files">Reading from HDF5 files</a></li>
+<li><a href="#writing-to-hdf5-files">Writing to HDF5 files</a></li>
+<li><a href="#deleting-parts-of-hdf5-files">Deleting parts of HDF5 files</a></li>
+<li><a href="#reading-attributes">Reading attributes</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="using-the-rhdf5-package" class="section level1">
+<h1>Using the rhdf5 package</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(rhdf5)</span></code></pre></div>
+<div class="figure">
+<img src="images/hdf5_structure.jpg" alt="Example HDF5 file structure" width="693" />
+<p class="caption">
+Example HDF5 file structure
+</p>
+</div>
+<div id="exploring-an-hdf5-file" class="section level2">
+<h2>Exploring an HDF5 file</h2>
+<p>To start with we’re going to look at and HDF5 file produced by 10X Genomics (the original file is available from <a href="https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc8k">here</a>). For the moment we aren’t going to worry about the specifics of the 10X format, but use this file to demonstrate how you can take a look at the contents of any HDF5 file.</p>
+<p>First, lets start with the function <code>h5ls()</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">h5ls</span>(<span class="dt">file =</span> <span class="st">&#39;../data/on-disk-data/pbmc8k_raw_gene_bc_matrices_h5.h5&#39;</span>)</span></code></pre></div>
+<pre><code>##     group       name       otype  dclass      dim
+## 0       /     GRCh38   H5I_GROUP                 
+## 1 /GRCh38   barcodes H5I_DATASET  STRING   737280
+## 2 /GRCh38       data H5I_DATASET INTEGER 17171167
+## 3 /GRCh38 gene_names H5I_DATASET  STRING    33694
+## 4 /GRCh38      genes H5I_DATASET  STRING    33694
+## 5 /GRCh38    indices H5I_DATASET INTEGER 17171167
+## 6 /GRCh38     indptr H5I_DATASET INTEGER   737281
+## 7 /GRCh38      shape H5I_DATASET INTEGER        2</code></pre>
+<p>The output from <code>h5ls()</code> gives us an overview of the structure of the file, without really showing us the content. We can see <code>pbmc8k_raw_gene_bc_matrices_h5.h5</code> contains a single group (GRCh38) and within that group there are many datasets. We can also see what type of data each dataset contains (the <code>dclass</code> column).</p>
+<div id="exercise" class="section level3">
+<h3>Exercise</h3>
+<p>Use <code>h5ls()</code> to examine the other HDF5 files in the <code>data</code> folder.</p>
+</div>
+</div>
+<div id="reading-from-hdf5-files" class="section level2">
+<h2>Reading from HDF5 files</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>pbmc8k_list &lt;-<span class="st"> </span><span class="kw">h5dump</span>(<span class="st">&quot;../data/on-disk-data/pbmc8k_raw_gene_bc_matrices_h5.h5&quot;</span>)</span></code></pre></div>
+<p>This list is quite large and isn’t going to be used again in this tutorial, so I recommend removing it from your R session so you do not run out of RAM.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">rm</span>(pbmc8k_list)</span></code></pre></div>
+<p>Sometimes you don’t want to read the entire file, just a particular dataset. <strong>rhdf5</strong> includes the function <code>h5read()</code>, which requires a file path and the <code>name</code> argument to identify the dataset you want within the hierarchy.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>pbmc8k_data &lt;-<span class="st"> </span><span class="kw">h5read</span>(<span class="dt">file =</span> <span class="st">&#39;../data/pbmc8k_raw_gene_bc_matrices_h5.h5&#39;</span>, <span class="dt">name =</span> <span class="st">&quot;/GRCh38/data&quot;</span>)</span></code></pre></div>
+</div>
+<div id="writing-to-hdf5-files" class="section level2">
+<h2>Writing to HDF5 files</h2>
+<p>As you probably expect, it’s all possible to write data to HDF5 files. This is probably a less frequent operation, either because you’re processing a large amount of data into something smaller and don’t need to use HDF5 to store or another piece of software does hte saving for you, but it useful to know and we will use further examples of this later to explore more properties of HDF5.</p>
+<p>In the example below we create a small matrix and write this to a dataset called <code>example_matrix</code>. We then use <code>h5ls()</code> to confirm that it’s been created.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>ex_matrix &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dt">nrow =</span> <span class="dv">5</span>, <span class="dt">ncol =</span> <span class="dv">2</span>)</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">h5write</span>(<span class="dt">obj =</span> ex_matrix, <span class="dt">file =</span> <span class="st">&quot;../data/on-disk-data/my_hdf5.h5&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;example_matrix&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="kw">h5ls</span>(<span class="st">&quot;../data/on-disk-data/my_hdf5.h5&quot;</span>)</span></code></pre></div>
+<pre><code>##   group           name       otype  dclass   dim
+## 0     / example_matrix H5I_DATASET INTEGER 5 x 2</code></pre>
+<div id="exercise-1" class="section level3">
+<h3>Exercise</h3>
+<p>Try adding other objects to the HDF5 file. Aspects you can try varying include: - R data type e.g. integer, numeric, character, … - R object type e.g. matrix, vector, array, list, data.frame, … - HDF location - you can specify locations in the file hierarchy using <code>/</code> e.g. <code>/place/in/the/file</code></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co">## use h5write() to try adding other things to a file</span></span></code></pre></div>
+</div>
+</div>
+<div id="deleting-parts-of-hdf5-files" class="section level2">
+<h2>Deleting parts of HDF5 files</h2>
+<p>Wanting to re-save something is quite a common need - at some point we all realise we’ve made a mistake or updated some parameters and improved a particular analysis. What happens if you try and overwrite an existing group or dataset in an HDF5 file? What about</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="co">## we&#39;ve grown our example matrix, and want to resave it.</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>ex_matrix &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">100</span>, <span class="dt">nrow =</span> <span class="dv">5</span>, <span class="dt">ncol =</span> <span class="dv">20</span>)</span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="kw">h5write</span>(<span class="dt">obj =</span> ex_matrix, <span class="dt">file =</span> <span class="st">&quot;../data/on-disk-data/my_hdf5.h5&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;example_matrix&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in H5Dwrite(h5dataset, obj, h5spaceMem = h5spaceMem, h5spaceFile = h5spaceFile) : 
+##   libhdf5
+##     error #000: H5Dio.c in H5Dwrite(): line 336
+##         class: HDF5
+##         major: Dataset
+##         minor: Write failed
+##     error #001: H5Dio.c in H5D__write(): line 722
+##         class: HDF5
+##         major: Invalid arguments to routine
+##         minor: Bad value</code></pre>
+<p>If you need to remove a group or dataset from an HDF5 file you can use <code>h5delete()</code>. Here we verify that removing a dataset means that it no longer shows up when we list the contents, and the file size has been reduced by the removal.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">file.size</span>(<span class="st">&quot;../data/on-disk-data/my_hdf5.h5&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 4048</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">h5delete</span>(<span class="dt">file =</span> <span class="st">&quot;../data/on-disk-data/my_hdf5.h5&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;example_matrix&quot;</span>)</span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="kw">h5ls</span>(<span class="st">&quot;../data/on-disk-data/my_hdf5.h5&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] group  name   otype  dclass dim   
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">file.size</span>(<span class="st">&quot;../data/on-disk-data/my_hdf5.h5&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 800</code></pre>
+</div>
+<div id="reading-attributes" class="section level2">
+<h2>Reading attributes</h2>
+<p>Sometimes important meta-data is stored in attributes associated with groups or datasets. We can use the <code>all = TRUE</code> option in <code>h5ls()</code> to list the number of attributes (along with other data), and <code>h5readAttributes()</code> to extract these in a similar fashion to before.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">h5ls</span>(<span class="st">&quot;../data/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad&quot;</span>, <span class="dt">all =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<pre><code>##                group         name         ltype corder_valid corder cset       otype num_attrs  dclass          dtype
+## 0                  /            X H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         3                       
+## 1                 /X         data H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F32LE
+## 2                 /X      indices H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 3                 /X       indptr H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 4                  /       layers H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         0                       
+## 5            /layers    logcounts H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         3                       
+## 6  /layers/logcounts         data H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F64LE
+## 7  /layers/logcounts      indices H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 8  /layers/logcounts       indptr H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 9            /layers      spliced H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         3                       
+## 10   /layers/spliced         data H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F64LE
+## 11   /layers/spliced      indices H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 12   /layers/spliced       indptr H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 13           /layers    unspliced H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         3                       
+## 14 /layers/unspliced         data H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F64LE
+## 15 /layers/unspliced      indices H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 16 /layers/unspliced       indptr H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0 INTEGER  H5T_STD_I32LE
+## 17                 /          obs H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         4                       
+## 18              /obs __categories H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         0                       
+## 19 /obs/__categories     celltype H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         1  STRING     H5T_STRING
+## 20 /obs/__categories      cluster H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         1  STRING     H5T_STRING
+## 21              /obs       _index H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0  STRING     H5T_STRING
+## 22              /obs     celltype H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         1 INTEGER   H5T_STD_I8LE
+## 23              /obs      cluster H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         1 INTEGER   H5T_STD_I8LE
+## 24              /obs   sizeFactor H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F64LE
+## 25                 /         obsm H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         0                       
+## 26             /obsm        X_pca H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F64LE
+## 27             /obsm       X_tsne H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F64LE
+## 28             /obsm       X_umap H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0   FLOAT H5T_IEEE_F64LE
+## 29                 /          var H5L_TYPE_HARD        FALSE      0    0   H5I_GROUP         4                       
+## 30              /var       _index H5L_TYPE_HARD        FALSE      0    0 H5I_DATASET         0  STRING     H5T_STRING
+##     stype rank       dim    maxdim
+## 0            0                    
+## 1  SIMPLE    1   8391896 UNLIMITED
+## 2  SIMPLE    1   8391896 UNLIMITED
+## 3  SIMPLE    1      1848 UNLIMITED
+## 4            0                    
+## 5            0                    
+## 6  SIMPLE    1   8391896 UNLIMITED
+## 7  SIMPLE    1   8391896 UNLIMITED
+## 8  SIMPLE    1      1848 UNLIMITED
+## 9            0                    
+## 10 SIMPLE    1   8237108 UNLIMITED
+## 11 SIMPLE    1   8237108 UNLIMITED
+## 12 SIMPLE    1      1848 UNLIMITED
+## 13           0                    
+## 14 SIMPLE    1   1825380 UNLIMITED
+## 15 SIMPLE    1   1825380 UNLIMITED
+## 16 SIMPLE    1      1848 UNLIMITED
+## 17           0                    
+## 18           0                    
+## 19 SIMPLE    1         4         4
+## 20 SIMPLE    1         8         8
+## 21 SIMPLE    1      1847      1847
+## 22 SIMPLE    1      1847      1847
+## 23 SIMPLE    1      1847      1847
+## 24 SIMPLE    1      1847      1847
+## 25           0                    
+## 26 SIMPLE    2 30 x 1847 30 x 1847
+## 27 SIMPLE    2  2 x 1847  2 x 1847
+## 28 SIMPLE    2  2 x 1847  2 x 1847
+## 29           0                    
+## 30 SIMPLE    1     54357     54357</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="kw">h5readAttributes</span>(<span class="dt">file =</span> <span class="st">&quot;../data/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;X&quot;</span>)</span></code></pre></div>
+<pre><code>## $`encoding-type`
+## [1] &quot;csr_matrix&quot;
+## 
+## $`encoding-version`
+## [1] &quot;0.1.0&quot;
+## 
+## $shape
+## [1]  1847 54357</code></pre>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

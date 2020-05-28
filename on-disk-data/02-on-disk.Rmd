@@ -9,24 +9,24 @@ output:
         number_sections: false
         theme: flatly
         highlight: tango
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Single-cell datasets can be extremely large.
-
-This sparsity provides a few options for storing and distributing single-cell count matrices in an efficient manner.  Typically this falls into one of two categories: 
-- Store a sparse representation of the matrix by recording only the non-zero values and an index of which row and column the value comes from.  This relies on the matrix being sparse enough, that the cost of storing the indices doesn't outway discarding the zero entries.
-- Store the complete 2-dimensional matrix and rely on compression techniques to reduce the file size.  Here no additional data are stored, but for very sparse matrices the compression will not necessaril be as efficient as removing the zero values entirely.
+Single-cell datasets can be extremely large, but are typically also very sparse.  This sparsity provides a few options for storing and distributing single-cell count matrices in an efficient manner.  Generally this falls into one of two categories: 
+- Store a sparse representation of the matrix by recording only the non-zero values and an index of which row and column the value comes from.  This relies on the matrix being sparse enough, that the cost of storing the indices doesn't outweigh discarding the zero entries.
+- Store the complete 2-dimensional matrix and rely on compression techniques to reduce the file size.  Here no additional data are stored, but for very sparse matrices the compression will not necessarily be as efficient as removing the zero values entirely.
 
 It is of course possible to combine these approaches and compress a sparse representation, but the effect will be less dramatic.
 
 
 # 10X Genomics
 
-10X provide their count matrices (referred to as "Feature-barcode matrices") using the sparse representation.  The follwing is taken from the 10X documentation available (here)[https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices].
+10X provide their count matrices (referred to as "Feature-barcode matrices") using the sparse representation.  The following is taken from the 10X documentation available (here)[https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices].
 
 
 ```
@@ -56,7 +56,7 @@ It is of course possible to combine these approaches and compress a sparse repre
 | indptr   | Zero-based index into data / indices of the start of each column, i.e., the data corresponding to each barcode sequence |
 | shape    | Matrix dimensions (# rows, # columns) |
 
-** It's worth noting that the exact file format has changed over time, and probably will continue to do so, to reflect changes in experimental protocols and software.  However the broad sparse matrix layout has remained consistent.  You can examples of 10X files generted with previous versions of Cell Ranger at https://support.10xgenomics.com/single-cell-gene-expression/datasets **
+**It's worth noting that the exact file format has changed over time, and probably will continue to do so, to reflect changes in experimental protocols and software.  However the broad sparse matrix layout has remained consistent.  You can examples of 10X files generated with previous versions of Cell Ranger (here)[https://support.10xgenomics.com/single-cell-gene-expression/datasets]**
 
 The file `neuron_1k_v3_filtered_feature_bc_matrix.h5` is an example of a feature / cell matrix produced by Cell Ranger 3.0.0, and we can verify that it's structure matches the schematic above using the `h5ls()` command we saw previously.  If you are provided with an HDF5 file of unknown provenance, an initial glance at the structure can often tell you a lot about how it was produced.
 
@@ -66,6 +66,10 @@ h5ls("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
 ```
 
 The sparse structure is efficient for storage and transfer, but not necessarily the easiest concept to work with directly.  It's likely that in your work you probably still want to interact with the counts as if they were a matrix with rows and columns.
+
+```{r, chunk-layout-fig, echo = FALSE, fig.cap='Representing a matrix as three vectors in the compressed sparse column format', fig.show = 'hold', out.width="100%"}
+knitr::include_graphics('images/sparse_structure.png')
+```
 
 ### Exercise
 
@@ -84,19 +88,7 @@ You can verify your solution by checking the sums of the values in the first 10 
 `1023  7210  9883  5290 18676 20196   716  6448 16837  2065`
 
 ```{r}
-tenx <- h5dump("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
-mat <- matrix(0, nrow = tenx$matrix$shape[1], ncol = tenx$matrix$shape[2])
-start_idx <- head( tenx$matrix$indptr, -1 ) + 1
-end_idx <- tail( tenx$matrix$indptr, -1 )
-             
-for(i in seq_along(start_idx)) {
-    
-    row_indices <- tenx$matrix$indices[ start_idx[i]:end_idx[i] ]+1
-    
-    mat[ row_indices, i ] <- tenx$matrix$data[ start_idx[i]:end_idx[i] ]
-}
-
-colnames(mat) <- tenx$matrix$barcodes
+## Insert your code here
 ```
 
 Most of the time you don't need to worry about the structure of these files, as you'll be using other software to read them and you hope the others of that software keep up-to-date with any changes to the file structure.
@@ -108,7 +100,7 @@ DropletUtils::read10xCounts("../data/on-disk-data/neuron_1k_v3_filtered_feature_
 Seurat::Read10X_h5("../data/on-disk-data/neuron_1k_v3_filtered_feature_bc_matrix.h5")
 ```
 
-# Complete matrix
+# Complete dense matrix
 
 Formats such as loom as well as many of the software tools found in Bioconductor use the alternative approach and store the entire 2-dimensional matrix, including zeros, on disk.
 
@@ -138,7 +130,3 @@ HDF5Array::TENxMatrix(filepath = "../data/on-disk-data/neuron_1k_v3_filtered_fea
 ```
 
 
-
-```{r}
-
-```
