@@ -118,7 +118,7 @@ h5read('../data/on-disk-data/L1_DRG_20_example.loom', name = "matrix")
 
 If you're interested in performing operations on single HDF5 dataset the HDF5Array package provides a neat interface.  Many of the Bioconductor classes for representing single-cell data (e.g. SingleCellExperiment) make use of this.  Here the meta data (Sample names, genes, etc) are stored in memory, but the actual count matrix is held on disk.
 
-```{r}
+```{r, message = FALSE}
 library(HDF5Array)
 HDF5Array(filepath = '../data/on-disk-data/L1_DRG_20_example.loom', name = "matrix")
 ```

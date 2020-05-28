@@ -58,7 +58,7 @@ Sometimes you don't want to read the entire file, just a particular dataset.  **
 
 
 ```{r, pbmc1}
-pbmc8k_data <- h5read(file = '../data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/GRCh38/data")
+pbmc8k_data <- h5read(file = '../data/on-disk-data/pbmc8k_raw_gene_bc_matrices_h5.h5', name = "/GRCh38/data")
 ```
 
 
@@ -111,6 +111,6 @@ file.size("../data/on-disk-data/my_hdf5.h5")
 Sometimes important meta-data is stored in attributes associated with groups or datasets.  We can use the `all = TRUE` option in `h5ls()` to list the number of attributes (along with other data), and `h5readAttributes()` to extract these in a similar fashion to before.
 
 ```{r}
-h5ls("../data/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad", all = TRUE)
-h5readAttributes(file = "../data/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad", name = "X")
+h5ls("../data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad", all = TRUE)
+h5readAttributes(file = "../data/spermatogenesis_rnavelocity/AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa.h5ad", name = "X")
 ```
