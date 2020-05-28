@@ -1,0 +1,37 @@
+[2020-05-13 12:27:51.610] [alevinLog] [info] Found 227024 transcripts(+0 decoys, +39 short and +0 duplicate names in the index)
+[2020-05-13 12:27:51.774] [alevinLog] [info] Filled with 227063 txp to gene entries 
+[2020-05-13 12:27:51.810] [alevinLog] [info] Found all transcripts to gene mappings
+[2020-05-13 12:27:51.831] [alevinLog] [info] Processing barcodes files (if Present) 
+
+ 
+[2020-05-13 12:29:36.182] [alevinLog] [info] Done barcode density calculation.
+[2020-05-13 12:29:36.182] [alevinLog] [info] # Barcodes Used: [32m66601887[0m / [31m66601887[0m.
+[2020-05-13 12:29:38.713] [alevinLog] [info] Knee found left boundary at [32m 1428 [0m
+[2020-05-13 12:29:38.913] [alevinLog] [info] Gauss Corrected Boundary at [32m 1179 [0m
+[2020-05-13 12:29:38.913] [alevinLog] [info] Learned InvCov: 121.187 normfactor: 401.89
+[2020-05-13 12:29:38.913] [alevinLog] [info] Total [32m1766[0m(has [32m586[0m low confidence) barcodes
+[2020-05-13 12:29:38.962] [alevinLog] [info] Done True Barcode Sampling
+[2020-05-13 12:29:39.078] [alevinLog] [info] Total 8.83541% reads will be thrown away because of noisy Cellular barcodes.
+[2020-05-13 12:29:39.157] [alevinLog] [info] Done populating Z matrix
+[2020-05-13 12:29:39.172] [alevinLog] [info] Total 41354 CB got sequence corrected
+[2020-05-13 12:29:39.178] [alevinLog] [info] Done indexing Barcodes
+[2020-05-13 12:29:39.178] [alevinLog] [info] Total Unique barcodes found: 898809
+[2020-05-13 12:29:39.178] [alevinLog] [info] Used Barcodes except Whitelist: 40367
+[2020-05-13 12:29:39.218] [alevinLog] [info] Done with Barcode Processing; Moving to Quantify
+
+[2020-05-13 12:29:39.218] [alevinLog] [info] parsing read library format
+[2020-05-13 12:41:58.991] [alevinLog] [info] Starting optimizer
+
+
+[2020-05-13 12:41:59.080] [alevinLog] [warning] mrna file not provided; using is 1 less feature for whitelisting
+[2020-05-13 12:41:59.080] [alevinLog] [warning] rrna file not provided; using is 1 less feature for whitelisting
+[2020-05-13 12:43:25.164] [alevinLog] [info] Total 9530705.00 UMI after deduplicating.
+[2020-05-13 12:43:25.164] [alevinLog] [info] Total 6805988 BiDirected Edges.
+[2020-05-13 12:43:25.164] [alevinLog] [info] Total 522666 UniDirected Edges.
+[2020-05-13 12:43:25.164] [alevinLog] [warning] Skipped 12 barcodes due to No mapped read
+[2020-05-13 12:43:25.182] [alevinLog] [info] Clearing EqMap; Might take some time.
+[2020-05-13 12:43:27.250] [alevinLog] [info] Starting white listing of 1753 cells
+[2020-05-13 12:43:27.250] [alevinLog] [info] Starting to make feature Matrix
+[2020-05-13 12:43:27.252] [alevinLog] [info] Done making feature Matrix
+[2020-05-13 12:43:27.958] [alevinLog] [info] Finished white listing
+[2020-05-13 12:43:28.674] [alevinLog] [info] Finished optimizer

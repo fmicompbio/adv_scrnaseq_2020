@@ -1,0 +1,22 @@
+[2020-05-13 12:27:51.463] [jointLog] [info] setting maxHashResizeThreads to 12
+[2020-05-13 12:27:51.463] [jointLog] [info] Fragment incompatibility prior below threshold.  Incompatible fragments will be ignored.
+[2020-05-13 12:27:51.463] [jointLog] [info] The --mimicBT2, --mimicStrictBT2 and --hardFilter flags imply mapping validation (--validateMappings). Enabling mapping validation.
+[2020-05-13 12:27:51.463] [jointLog] [info] Usage of --validateMappings implies use of minScoreFraction. Since not explicitly specified, it is being set to 0.65
+[2020-05-13 12:27:51.463] [jointLog] [info] The use of range-factorized equivalence classes does not make sense in conjunction with --hardFilter.  Disabling range-factorized equivalence classes. 
+[2020-05-13 12:27:51.463] [jointLog] [info] Usage of --validateMappings implies a default consensus slack of 0.2. Setting consensusSlack to 0.35.
+[2020-05-13 12:27:51.463] [jointLog] [info] Using default value of 0.87 for minScoreFraction in Alevin
+Using default value of 0.6 for consensusSlack in Alevin
+[2020-05-13 12:29:39.218] [jointLog] [info] There is 1 library.
+[2020-05-13 12:29:39.297] [jointLog] [info] Loading pufferfish index
+[2020-05-13 12:29:39.297] [jointLog] [info] Loading dense pufferfish index.
+[2020-05-13 12:29:40.077] [jointLog] [info] done
+[2020-05-13 12:29:40.077] [jointLog] [info] Index contained 227,063 targets
+[2020-05-13 12:29:40.123] [jointLog] [info] Number of decoys : 0
+[2020-05-13 12:41:54.147] [jointLog] [info] Computed 189,352 rich equivalence classes for further processing
+[2020-05-13 12:41:54.147] [jointLog] [info] Counted 33,450,827 total reads in the equivalence classes 
+[2020-05-13 12:41:54.147] [jointLog] [info] Number of fragments discarded because they are best-mapped to decoys : 0
+[2020-05-13 12:41:54.147] [jointLog] [warning] Found 3271 reads with `N` in the UMI sequence and ignored the reads.
+Please report on github if this number is too large
+[2020-05-13 12:41:54.147] [jointLog] [info] Mapping rate = 50.225%
+
+[2020-05-13 12:41:54.147] [jointLog] [info] finished quantifyLibrary()

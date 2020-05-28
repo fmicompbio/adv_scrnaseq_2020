@@ -45,7 +45,7 @@ _RNA velocity_ (introduced by @La_Manno2018-velocyto) is one approach to address
 In practice, RNA velocity analyses are often summarized by plots such as those shown below (from the [scVelo tutorial](https://scvelo.readthedocs.io/DynamicalModeling.html)): on the left, a vector field overlaid on a low-dimensional embedding, visualizing the 'flow' encoded by the velocities, and on the right, phase plots illustrating single genes.
 We will see in this lecture how to generate such plots from raw droplet scRNA-seq data, and how to interpret the results.
 
-![](figures/scvelo_example_dynmod.png)
+![](rna-velocity-figures/scvelo_example_dynmod.png)
 
 The RNA velocity is defined as the rate of change of the mature RNA abundance in a cell, and can be estimated from scRNA-seq data by joint modeling of estimated unspliced (pre-mRNA) and spliced (mature mRNA) abundances.
 This exploitation of the underlying molecular dynamics of the process sets it apart from other approaches for trajectory analysis, which typically use the similarity of the estimated gene expression profiles among cells to construct a path through the observed data. 
@@ -114,7 +114,7 @@ This is, in essence, the idea behind the approach taken by @La_Manno2018-velocyt
 If we fix one of the parameter values (e.g., setting $\beta=1$ as in @La_Manno2018-velocyto, corresponding to an assumption of a shared splicing rate between genes) we can estimate the other one ($\gamma$), and consequently obtain an estimate of the RNA velocity $v$, since $$v=\frac{ds(t)}{dt}=\beta u(t)-\gamma s(t).$$
 Notably, these velocities can be derived directly from the phase plot: 
 
-<img src="figures/steady_state_velocity.001.png" width = "50%">
+<img src="rna-velocity-figures/steady_state_velocity.001.png" width = "50%">
 
 Consider any point along the trajectory. 
 By construction, the y coordinate of this point is equal to $u(t)$. 
@@ -200,7 +200,7 @@ For this reason, below we will focus on methods defining the pre-mRNA abundance 
 
 Let's consider the gene in the figure below. 
 
-![](figures/intron_definition_2.001.png)
+![](rna-velocity-figures/intron_definition_2.001.png)
 
 It has two transcript isoforms, one with two exons and one with three exons. 
 The isoforms are partly overlapping. 
@@ -233,18 +233,18 @@ In order to better understand some of these differences, we show below a few exa
 
 * Chkb - overlapping features on the same strand. In this case, only _alevin_ assigns a non-zero UMI count (and _STARsolo-diff_, which defines the intronic count as the difference between a "gene body count" and the regular gene expression). 
 
-![](figures/pancreas_Chkb.png)
+![](rna-velocity-figures/pancreas_Chkb.png)
 
 * Rassf1 - overlapping features on different strands. 
 Whether or not the tool accounts for the strandedness of the reads makes a difference.
 
-![](figures/pancreas_Rassf1.png)
+![](rna-velocity-figures/pancreas_Rassf1.png)
 
 * Tspan3 - many ambiguous regions. 
 The way that the introns are defined makes a substantial difference. 
 The intronic count is much higher with the 'separate' intron definition approach.
 
-![](figures/pancreas_Tspan3.png)
+![](rna-velocity-figures/pancreas_Tspan3.png)
 
 These differences between counts obtained by different methods propagate also to the estimated velocities, and can affect the biological interpretation of the final results. 
 
@@ -294,9 +294,9 @@ Here, we first set the path to the data (`datadir`), as well as to the folder wh
 
 
 ```{.r .rchunk}
-if (file.exists("/home/rstudio/adv_scrnaseq_2020")) {
-  datadir <- "/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset"
-  outdir <- "/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron"
+if (file.exists("/work/adv_scrnaseq_2020")) {
+  datadir <- "/work/adv_scrnaseq_2020/data/spermatogenesis_subset"
+  outdir <- "/work/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron"
 } else {
   datadir <- "data/spermatogenesis_subset"
   outdir <- "data/spermatogenesis_subset/txintron"
@@ -308,8 +308,8 @@ Sys.setenv(datadir = datadir, outdir = outdir)
 
 ```{.bash .bashchunk}
 ## If run in a console
-## datadir=/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset
-## outdir=/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron
+## datadir=/work/adv_scrnaseq_2020/data/spermatogenesis_subset
+## outdir=/work/adv_scrnaseq_2020/data/spermatogenesis_subset/txintron
 ## Check what is included in the data directory
 ls $datadir
 ```
@@ -867,13 +867,13 @@ txis
 
 ```
 ## class: SingleCellExperiment 
-## dim: 2787 346 
+## dim: 2787 319 
 ## metadata(0):
 ## assays(2): spliced unspliced
 ## rownames(2787): ENSMUSG00000117547.1 ENSMUSG00000097746.2 ...
 ##   ENSMUSG00000095993.1 ENSMUSG00000118197.1
 ## rowData names(0):
-## colnames(346): CCTACCAGTAGCCTAT GAGTCCGGTCGTCTTC ... CCATGTCAGACTAGAT
+## colnames(319): CCTACCAGTAGCCTAT GAGTCCGGTCGTCTTC ... CCATGTCAGACTAGAT
 ##   CAGCAGCCACGCGAAA
 ## colData names(0):
 ## reducedDimNames(0):
@@ -914,8 +914,8 @@ from os import path
 
 ```{.python .pythonchunk}
 ## Path to data to use for RNA velocity calculations
-if (path.exists("/home/rstudio/adv_scrnaseq_2020")):
-  velodir = Path('/home/rstudio/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity')
+if (path.exists("/work/adv_scrnaseq_2020")):
+  velodir = Path('/work/adv_scrnaseq_2020/data/spermatogenesis_rnavelocity')
 else:
   velodir = Path('data/spermatogenesis_rnavelocity')
 ```
@@ -1137,7 +1137,7 @@ The model assumes the existence of four different transcriptional states - two s
 The EM algorithm iterates between estimating the latent time of a cell (the 'position' of the cell along the phase space trajectory) and assigning it a transcriptional state, and optimizing the values of the parameters (see Figure below from @Bergen2019-scvelo). 
 The likelihood is obtained by assuming that the observations follow a normal distribution:$$x_i^{obs}\sim N((\hat{u}(t), \hat{s}(t)), \sigma^2).$$
 
-![](figures/BergenFig1.jpg)
+![](rna-velocity-figures/BergenFig1.jpg)
 
 Here, we will focus on the dynamical model, since it is generally the most accurate, and although it's a bit slower than the other methods, usually it's not prohibitively slow.
 
@@ -1199,7 +1199,7 @@ scv.tl.recover_dynamics(adata)
 
 ```
 ## recovering dynamics
-## ... 0%... 1%... 1%... 3%... 4%... 5%... 6%... 7%... 8%... 9%... 10%... 11%... 12%... 13%... 14%... 15%... 16%... 18%... 18%... 19%... 20%... 21%... 22%... 23%... 24%... 25%... 26%... 28%... 28%... 29%... 30%... 31%... 32%... 33%... 34%... 35%... 36%... 37%... 38%... 39%... 39%... 40%... 41%... 42%... 43%... 44%... 45%... 46%... 47%... 48%... 49%... 50%... 51%... 52%... 53%... 54%... 54%... 55%... 56%... 57%... 58%... 59%... 60%... 61%... 61%... 63%... 64%... 65%... 66%... 67%... 68%... 70%... 70%... 72%... 72%... 73%... 75%... 75%... 77%... 78%... 79%... 80%... 81%... 82%... 83%... 84%... 85%... 86%... 87%... 88%... 90%... 91%... 92%... 93%... 94%... 95%... 96%... 98%... 100%    finished (0:05:25) --> added 
+## ... 0%... 1%... 2%... 3%... 4%... 5%... 7%... 8%... 9%... 10%... 11%... 12%... 13%... 14%... 15%... 16%... 17%... 18%... 19%... 20%... 21%... 22%... 23%... 25%... 25%... 27%... 28%... 29%... 30%... 31%... 32%... 33%... 34%... 35%... 36%... 37%... 38%... 39%... 39%... 41%... 42%... 43%... 44%... 45%... 46%... 47%... 48%... 49%... 50%... 51%... 52%... 53%... 54%... 54%... 55%... 56%... 57%... 58%... 59%... 60%... 61%... 61%... 63%... 64%... 65%... 66%... 67%... 68%... 69%... 70%... 71%... 72%... 73%... 74%... 75%... 77%... 78%... 79%... 80%... 81%... 82%... 83%... 84%... 85%... 86%... 87%... 88%... 89%... 90%... 92%... 93%... 94%... 95%... 96%... 97%... 98%... 100%    finished (0:05:16) --> added 
 ##     'fit_pars', fitted parameters for splicing dynamics (adata.var)
 ```
 
@@ -1226,6 +1226,14 @@ This step adds several columns to `adata.var` (see [https://scvelo.readthedocs.i
 * degradation rate estimates (`fit_gamma`)
 * estimates of switching time points (`fit_t_`)
 * the likelihood value of the fit (`fit_likelihood`), averaged across all cells. The likelihood value for a gene and a cell indicates how well the cell is described by the learned phase trajectory.
+
+Since the step above is quite time consuming, we'll save an intermediate object at this point:
+
+
+```{.python .pythonchunk}
+adata.write(velodir/'AdultMouseRep3_alevin_GRCm38.gencode.vM21.spliced.intron.fl90.gentrome.k31_sce_nometa_with_velocity.h5ad')
+```
+
 
 Once the kinetic rate parameters are estimated, the `tl.velocity` function estimates the actual velocities based on these. 
 This adds a `velocity` layer to the `adata` object, and the `velocity_genes` column in `adata.var`.
@@ -1383,8 +1391,8 @@ The graph can also be used to estimate the most likely cell transitions, and the
 
 ```{.python .pythonchunk}
 x, y = scv.utils.get_cell_transitions(adata, basis = 'tsne', starting_cell = 70)
-ax = scv.pl.velocity_graph(adata, basis = 'tsne', c = 'lightgrey', edge_width = 0.05, show = False)
-ax = scv.pl.scatter(adata, x = x, y = y, s = 120, c = 'ascending', cmap = 'gnuplot', ax = ax)
+ax = scv.pl.velocity_graph(adata, basis = 'tsne', color = 'lightgrey', edge_width = 0.05, show = False)
+ax = scv.pl.scatter(adata, x = x, y = y, size = 120, color = 'ascending', ax = ax)
 ```
 
 <img src="rna-velocity_files/figure-html/trace-descendants-1.png" width="672" />
@@ -1640,6 +1648,8 @@ The module `tl.rank_velocity_genes` runs a differential velocity t-test and outp
 
 
 ```{.python .pythonchunk}
+## min_corr is the minimum accepted Spearman correlation coefficient 
+## between spliced and unspliced
 scv.tl.rank_velocity_genes(adata, groupby = 'celltype', min_corr = 0.3)
 ```
 
@@ -1666,50 +1676,42 @@ df.head()
 ## [5 rows x 4 columns]
 ```
 
-```{.python .pythonchunk}
-kwargs = dict(frameon = False, size = 20, linewidth = 1.5)
-
-for cluster in ['DIplotene/Secondary spermatocytes', 'Mid Round spermatids']:
-  scv.pl.scatter(adata, df[cluster][:5], ylabel = cluster, **kwargs, color = 'celltype')
-```
-
-<img src="rna-velocity_files/figure-html/rank-velocity-genes-1.png" width="3360" /><img src="rna-velocity_files/figure-html/rank-velocity-genes-2.png" width="3360" />
-
-Moreover, partial gene likelihoods (average likelihood over a subset of the cells) can be computed for a each cluster of cells to enable cluster-specific identification of potential drivers.
+In the most recent release of _scVelo_ (0.2.0), the possibility of performing a 'differential kinetics' test was introduced. 
+The purpose of this is to detect genes that display a different kinetic behaviour in some cell types than in others, giving rise to multiple trajectories.
+The `tl.differential_kinetic_test` module performs a likelihood ratio test evaluating whether allowing different kinetics for different cell populations give a significantly better likelihood than forcing them to follow the same one. 
 
 
 ```{.python .pythonchunk}
-scv.tl.rank_dynamical_genes(adata, groupby='celltype')
+scv.tl.differential_kinetic_test(adata, var_names = 'velocity_genes', groupby = 'celltype')
 ```
 
 ```
-## ranking genes by cluster-specific likelihoods
-##     finished (0:00:01) --> added 
-##     'rank_dynamical_genes', sorted scores by group ids (adata.uns)
-```
-
-```{.python .pythonchunk}
-df = scv.get_df(adata, 'rank_dynamical_genes/names')
-df.head(5)
-```
-
-```
-##   DIplotene/Secondary spermatocytes  ...   Mid Round spermatids
-## 0              ENSMUSG00000059119.9  ...   ENSMUSG00000115761.1
-## 1             ENSMUSG00000020650.15  ...   ENSMUSG00000111639.1
-## 2             ENSMUSG00000054405.14  ...  ENSMUSG00000037708.16
-## 3              ENSMUSG00000022018.7  ...   ENSMUSG00000056987.8
-## 4             ENSMUSG00000005233.16  ...   ENSMUSG00000110576.2
-## 
-## [5 rows x 4 columns]
+## testing for differential kinetics
+## ... 4%... 8%... 13%... 17%... 21%... 26%... 30%... 34%... 39%... 43%... 48%... 52%... 57%... 61%... 65%... 70%... 74%... 79%... 83%... 88%... 92%... 96%... 100%    finished (0:01:09) --> added 
+##     'fit_diff_kinetics', clusters displaying differential kinetics (adata.var)
+##     'fit_pval_kinetics', p-values of differential kinetics (adata.var)
 ```
 
 ```{.python .pythonchunk}
-for cluster in ['DIplotene/Secondary spermatocytes', 'Mid Round spermatids']:
-    scv.pl.scatter(adata, df[cluster][:5], ylabel = cluster, frameon = False, color = 'celltype')
+top_genes_kin = adata.var['fit_pval_kinetics'].sort_values(ascending = True).index[:5]
+scv.get_df(adata[:, top_genes_kin], ['fit_diff_kinetics', 'fit_pval_kinetics'], precision = 2)
 ```
 
-<img src="rna-velocity_files/figure-html/dynamical-genes-1.png" width="3360" /><img src="rna-velocity_files/figure-html/dynamical-genes-2.png" width="3360" />
+```
+##                       fit_diff_kinetics  fit_pval_kinetics
+## ENSMUSG00000022018.7   Mid Round sperma           0.00e+00
+## ENSMUSG00000030346.16  Late Round sperm          1.87e-222
+## ENSMUSG00000095710.7   DIplotene/Second          1.29e-117
+## ENSMUSG00000028950.3   Late Round sperm           1.90e-33
+## ENSMUSG00000035455.12  DIplotene/Second           4.09e-32
+```
+
+```{.python .pythonchunk}
+scv.pl.scatter(adata, basis = top_genes_kin, legend_loc = 'none', size = 80,
+               frameon = True, ncols = 5, fontsize = 20, color = 'celltype')
+```
+
+<img src="rna-velocity_files/figure-html/diff-kinetics-1.png" width="3360" />
 
 
 ### Additional useful statistics
@@ -1743,17 +1745,17 @@ adata.obs
 
 ```
 ##                                            celltype  ...  velocity_confidence_transition
-## GACTGCGGTTTGACTG  DIplotene/Secondary spermatocytes  ...                        0.162042
-## AATCCAGTCATCTGCC  DIplotene/Secondary spermatocytes  ...                        0.115152
-## ACACCAATCTTCGGTC  DIplotene/Secondary spermatocytes  ...                        0.077206
-## TGACAACAGGACAGAA               Mid Round spermatids  ...                        0.169975
-## TTGGAACAGGCGTACA               Mid Round spermatids  ...                        0.238152
+## GACTGCGGTTTGACTG  DIplotene/Secondary spermatocytes  ...                            0.16
+## AATCCAGTCATCTGCC  DIplotene/Secondary spermatocytes  ...                            0.12
+## ACACCAATCTTCGGTC  DIplotene/Secondary spermatocytes  ...                            0.08
+## TGACAACAGGACAGAA               Mid Round spermatids  ...                            0.17
+## TTGGAACAGGCGTACA               Mid Round spermatids  ...                            0.24
 ## ...                                             ...  ...                             ...
-## TGCGTGGGTATATGGA              Late Round spermatids  ...                        0.548460
-## TTAACTCAGTTGAGAT  DIplotene/Secondary spermatocytes  ...                       -0.054895
-## TAGCCGGAGGAATCGC              Late Round spermatids  ...                        0.051820
-## TCGCGTTCAAGAGTCG               Mid Round spermatids  ...                       -0.017357
-## CACCTTGCAGATCGGA               Mid Round spermatids  ...                        0.259464
+## TGCGTGGGTATATGGA              Late Round spermatids  ...                            0.55
+## TTAACTCAGTTGAGAT  DIplotene/Secondary spermatocytes  ...                           -0.05
+## TAGCCGGAGGAATCGC              Late Round spermatids  ...                            0.05
+## TCGCGTTCAAGAGTCG               Mid Round spermatids  ...                           -0.02
+## CACCTTGCAGATCGGA               Mid Round spermatids  ...                            0.26
 ## 
 ## [1847 rows x 15 columns]
 ```
@@ -1792,7 +1794,7 @@ sinfo()
 ## Darwin-17.7.0-x86_64-i386-64bit
 ## 8 logical CPU cores, i386
 ## -----
-## Session information updated at 2020-05-25 20:53
+## Session information updated at 2020-05-27 21:28
 ```
 
 
