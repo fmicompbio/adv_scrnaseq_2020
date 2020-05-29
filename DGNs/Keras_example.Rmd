@@ -79,7 +79,7 @@ suppressPackageStartupMessages({
 #reticulate::py_discover_config(required_module = "keras")
 
 ## For setup on a renku environment:  
-#reticulate::use_virtualenv("/opt/conda")
+reticulate::use_virtualenv("/opt/conda")
 
 reticulate::py_config()
 library(keras)
@@ -91,7 +91,7 @@ library(keras)
 
 
 ## Preparing the data:
-![](figures/MNIST.png)
+![](/work/adv_scrnaseq_2020/adv_scrnaseq_2020/DGNs/figures/MNIST.png)
 ```{r MLP}
 #loading the keras inbuilt mnist dataset
 data<-dataset_mnist()
@@ -136,7 +136,7 @@ layer_dense(units = 10,activation = 'softmax')
 summary(model)
 ```
 
-![](figures/MLP_model.png)
+![](/work/adv_scrnaseq_2020/adv_scrnaseq_2020/DGNs/figures/MLP_model.png)
 
 ## Compilation
 We are now going to compile the specified model. There are two required arguments that need to be specified 

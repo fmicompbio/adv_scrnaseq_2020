@@ -34,12 +34,8 @@ library(reticulate)
 #reticulate::py_discover_config(required_module = "keras")
 
 ## For setup on a renku environment:  
-#reticulate::use_virtualenv("/opt/conda")
+reticulate::use_virtualenv("/opt/conda")
 
-## Only for xenon6 setup:
-#reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.3.0-tensorflow-2.0.0-gpu/") # Use TF2
-#reticulate::use_virtualenv("/tungstenfs/groups/gbioinfo/sharedSoft/virtualenvs/r-reticulate-keras-2.2.5-tensorflow-1.14.0-gpu") # Use TF1
-#Sys.setenv("CUDA_VISIBLE_DEVICES" = "3" )
 
 reticulate::py_config()
 library(keras)
@@ -73,12 +69,13 @@ composition of the dataset:
 
 ```{r Download}
 ## Download the data and set row names to gene symbols whenever possible
-sce <- readRDS(gzcon(url("https://github.com/fmicompbio/adv_scrnaseq_2020/blob/master/DGNs/data/SCE_MammaryGland.rds?raw=true")))
+#sce <- readRDS(gzcon(url("https://github.com/fmicompbio/adv_scrnaseq_2020/blob/master/DGNs/data/SCE_MammaryGland.rds?raw=true")))
+sce <- readRDS("/work/adv_scrnaseq_2020/data/dgn/SCE_MammaryGland.rds")
 #Subsample cells to speed up processing and, most importantly, later-on model training:
-set.seed(42)
-n=4000
+#set.seed(42)
+#n=4000
 #sce <- sce[, sample(1:ncol(sce), n )  ]
-## Dataset compostion per cell type and study:  
+## Dataset composition per cell type and study:  
 table(colData(sce)$study , colData(sce)$cell.class)
 ```
 
@@ -143,7 +140,7 @@ rm(M)
 
 # Define the  variational autoencoder model
 
-![](figures/VAE_schematic.png){ width=40% }
+![](/work/adv_scrnaseq_2020/adv_scrnaseq_2020/DGNs/figures/VAE_schematic.png){ width=40% }
 
 ```{r}
 ##### Sparse variational autoencoder model 
@@ -329,7 +326,6 @@ early_stopping <- callback_early_stopping(monitor = "val_loss", min_delta = 0,
 
 ```{r  eval=FALSE}
 ##### Tensorboard callback (do not execute):
-#indir <- "/tungstenfs/groups/gbioinfo/papapana/DEEP_LEARNING/Autoencoders/BatchCor_paper/" # When running from xenon
 indir <- "/Users/papapana/Desktop/XENON/papapana/DEEP_LEARNING/Autoencoders/BatchCor_paper" # When running locally
 log_dir <-  paste0(indir,"/logs/run_exercise_DGNs/")
 system(paste0 ("rm -rf ", log_dir, "/*")  )
@@ -345,7 +341,7 @@ tnsrb <- callback_tensorboard( log_dir )
 
 ```{r eval=FALSE}
 nepochs=1000 #
-######  Fit the model using also our specified callbacks for scheduling and ealry stopping:
+######  Fit the model using also our specified callbacks for scheduling and early stopping:
 history <- vae %>% fit(
     x=sc_train_x,
     y=sc_train_x, 
@@ -362,7 +358,7 @@ history <- vae %>% fit(
 ```
 
 ```{r}
-history <- readRDS("data/MG_complete_VAE_history.rds")
+history <- readRDS("/work/adv_scrnaseq_2020/data/dgn/MG_complete_VAE_history.rds")
 plot(history)
 
 ```
@@ -389,11 +385,9 @@ We now have in our hands a trained VAE for our dataset. What is it good for?
 
 ```{r fig.width=7, fig.height=7}
 ########################################################################################################  
-vae %>% load_model_weights_hdf5("trained_models/MG_complete_VAE_weights.hdf5")
-#vae %>% load_model_weights_hdf5("data/dgn/MG_complete_VAE_weights.hdf5")
+vae %>% load_model_weights_hdf5("/work/adv_scrnaseq_2020/data/dgn/MG_complete_VAE_weights.hdf5")
 
-palettes <- readRDS("data/distinct_palettes.rds")
-#palettes <- readRDS("data/dgn/distinct_palettes.rds")
+palettes <- readRDS("/work/adv_scrnaseq_2020/data/dgn/distinct_palettes.rds")
 
 ##### Run on the combined select dataset (train + validation):
 study_annot <- sce$study
@@ -498,7 +492,7 @@ legend("topright",legend = c("poisson","loess.fit"),lty=2,lwd=2,bty="n",col=c("d
 Here we will show a first example of using our learned latent space for inference. Specifically we will correct for batch-specific
 effects by decomposing the variance in the latent space:
 
-![](figures/LatentArithm_BC.png){ width=50% }
+![](/work/adv_scrnaseq_2020/adv_scrnaseq_2020/DGNs/figures/LatentArithm_BC.png){ width=50% }
 
 ```{r fig.width=10, fig.height=7}
 ########## Latent arithmetic operations to correct for batch :
@@ -573,12 +567,11 @@ Now we implement a second example of latent arithmetic-based inference. In this 
 in one of the three studies (wal). Following the same rational of decomposing variance sources in latent space we will then predict the profile of the missing
 cell type in the target study:
 
-![](figures/LatentArithm_OoS.png){ width=50% }
+![](/work/adv_scrnaseq_2020/adv_scrnaseq_2020/DGNs/figures/LatentArithm_OoS.png){ width=50% }
 
 ```{r fig.width=9, fig.height=3}
 #We will use a model that was trained on data that never saw wal luminal progenitor cells:
-#vae %>% load_model_weights_hdf5("data/dgn/MG_leavout_wallp_VAE_weights.hdf5")
-vae %>% load_model_weights_hdf5("trained_models/MG_leavout_wallp_VAE_weights.hdf5")
+vae %>% load_model_weights_hdf5("/work/adv_scrnaseq_2020/data/dgn/MG_leavout_wallp_VAE_weights.hdf5")
 latent_output <- predict(encoder, list(gene_input=sc_x))
 
 
