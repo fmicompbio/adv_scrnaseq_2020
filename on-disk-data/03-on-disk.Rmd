@@ -98,4 +98,16 @@ system.time( h5read(file = "../data/on-disk-data/one_chunk.h5", name = "/one_chu
 
 We can also look at the file size to get an idea of how the compression is affected.
 
+## Writing subsets
+
+We can use the `index` syntax to write subsets of a dataset. 
+
+```{r}
+h5write(rep(1000, nrow(brain_10k)), file = "../data/on-disk-data/one_chunk.h5", name = "one_chunk", index = list(NULL, 1))
+HDF5Array(file = "../data/on-disk-data/one_chunk.h5", name = "/one_chunk")
+```
+
+It's not always necessary to delete datasets, but be aware of type conversions (or lack of!)
+
+
 
